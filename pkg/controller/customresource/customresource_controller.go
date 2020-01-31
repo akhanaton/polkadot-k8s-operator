@@ -7,6 +7,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -87,46 +88,64 @@ type ReconcileCustomResource struct {
 
 // Reconcile reads that state of the cluster for a CustomResource object and makes changes based on the state read
 // and what is in the CustomResource.Spec
-// Note:
-// The Controller will requeue the Request to be processed again if the returned error is non-nil or
-// Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileCustomResource) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	logger.Info("Reconciling CustomResource")
 
 	handledCRInstance, err := r.handleCustomResource(request)
 	if err != nil {
-		logger.Info("Requeing the Reconciling request... ")
-		return reconcile.Result{}, err
+		return handleRequeueError(err,logger)
 	}
 	if handledCRInstance == nil {
-		logger.Info("Return and not requeing the request")
-		return reconcile.Result{}, nil
+		return handleRequeueStd(err, logger)
 	}
 
 	isRequeueForced, err := r.handleDeployment(handledCRInstance)
 	if err != nil {
-		logger.Info("Requeing the Reconciling request... ")
-		return reconcile.Result{}, err
+		return handleRequeueError(err,logger)
 	}
 	if isRequeueForced {
-		logger.Info("Requeing the Reconciling request... ")
-		return reconcile.Result{Requeue: true}, nil
+		return handleRequeueForced(err, logger)
 	}
 
 	isRequeueForced, err = r.handleService(handledCRInstance)
 	if err != nil {
-		logger.Info("Requeing the Reconciling request... ")
-		return reconcile.Result{}, err
+		return handleRequeueError(err,logger)
 	}
 	if isRequeueForced {
-		logger.Info("Requeing the Reconciling request... ")
-		return reconcile.Result{Requeue: true}, nil
+		return handleRequeueForced(err, logger)
 	}
 
-	// more handlers
+	isRequeueForced, err = r.handlePVC(handledCRInstance)
+	if err != nil {
+		return handleRequeueError(err,logger)
+	}
+	if isRequeueForced {
+		return handleRequeueForced(err, logger)
+	}
 
-	return reconcile.Result{}, nil
+	return handleRequeueStd(err, logger)
+}
+
+// The Controller will requeue the Request to be processed again if the returned error is non-nil or
+// Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
+func handleRequeueError (err error, logger logr.Logger) (reconcile.Result, error){
+	logger.Info("Requeing the Reconciling request... ")
+	return reconcile.Result{}, err
+}
+
+func handleRequeueForced (err error, logger logr.Logger) (reconcile.Result, error){
+	logger.Info("Requeing the Reconciling request... ")
+	return reconcile.Result{Requeue: true}, nil
+}
+
+func handleRequeueStd (err error, logger logr.Logger) (reconcile.Result, error){
+	logger.Info("Return and not requeing the request")
+	return reconcile.Result{Requeue: true}, nil
+}
+
+func (r *ReconcileCustomResource) setOwnership(owner metav1.Object, owned metav1.Object) error {
+	return controllerutil.SetControllerReference(owner, owned, r.scheme)
 }
 
 func (r *ReconcileCustomResource) handleCustomResource(request reconcile.Request) (*cachev1alpha1.CustomResource, error) {
@@ -161,7 +180,7 @@ func (r *ReconcileCustomResource) handleDeployment(CRInstance *cachev1alpha1.Cus
 	const NotForcedRequeue = false
 	const ForcedRequeue = true
 
-	desiredDeployment := r.newDeploymentForCR(CRInstance)
+	desiredDeployment := newDeploymentForCR(CRInstance)
 	logger := log.WithValues("Deployment.Namespace", desiredDeployment.Namespace, "Deployment.Name", desiredDeployment.Name)
 
 	foundDeployment, err := r.fetchDeployment(desiredDeployment)
@@ -212,25 +231,21 @@ func (r *ReconcileCustomResource) createDeployment(deployment *appsv1.Deployment
 	return err
 }
 
-func (r *ReconcileCustomResource) setOwnership(owner metav1.Object, owned metav1.Object) error {
-	return controllerutil.SetControllerReference(owner, owned, r.scheme)
-}
-
-func areDeploymentsDifferent(currentDeployment *appsv1.Deployment, desideredDeployment *appsv1.Deployment, logger logr.Logger) bool {
+func areDeploymentsDifferent(currentDeployment *appsv1.Deployment, desiredDeployment *appsv1.Deployment, logger logr.Logger) bool {
 	result := false
 
-	if isDeploymentReplicaDifferent(currentDeployment, desideredDeployment, logger) {
+	if isDeploymentReplicaDifferent(currentDeployment, desiredDeployment, logger) {
 		result = true
 	}
-	if isDeploymentVersionDifferent(currentDeployment, desideredDeployment, logger) {
+	if isDeploymentVersionDifferent(currentDeployment, desiredDeployment, logger) {
 		result = true
 	}
 
 	return result
 }
 
-func isDeploymentReplicaDifferent(currentDeployment *appsv1.Deployment, desideredDeployment *appsv1.Deployment, logger logr.Logger) bool {
-	size := *desideredDeployment.Spec.Replicas
+func isDeploymentReplicaDifferent(currentDeployment *appsv1.Deployment, desiredDeployment *appsv1.Deployment, logger logr.Logger) bool {
+	size := *desiredDeployment.Spec.Replicas
 	if *currentDeployment.Spec.Replicas != size {
 		logger.Info("Find a replica size mismatch...")
 		return true
@@ -238,8 +253,8 @@ func isDeploymentReplicaDifferent(currentDeployment *appsv1.Deployment, desidere
 	return false
 }
 
-func isDeploymentVersionDifferent(currentDeployment *appsv1.Deployment, desideredDeployment *appsv1.Deployment, logger logr.Logger) bool {
-	version := desideredDeployment.ObjectMeta.Labels["version"]
+func isDeploymentVersionDifferent(currentDeployment *appsv1.Deployment, desiredDeployment *appsv1.Deployment, logger logr.Logger) bool {
+	version := desiredDeployment.ObjectMeta.Labels["version"]
 	if currentDeployment.ObjectMeta.Labels["version"] != version {
 		logger.Info("Found a version mismatch...")
 		return true
@@ -256,17 +271,17 @@ func (r *ReconcileCustomResource) handleService(CRInstance *cachev1alpha1.Custom
 	const NotForcedRequeue = false
 	const ForcedRequeue = true
 
-	desideredService := r.newServiceForCR(CRInstance)
-	logger := log.WithValues("Service.Namespace", desideredService.Namespace, "Service.Name", desideredService.Name)
+	desiredService := newServiceForCR(CRInstance)
+	logger := log.WithValues("Service.Namespace", desiredService.Namespace, "Service.Name", desiredService.Name)
 
-	foundService, err := r.fetchService(desideredService)
+	foundService, err := r.fetchService(desiredService)
 	if err != nil {
 		logger.Error(err, "Error on fetch the Service...")
 		return NotForcedRequeue, err
 	}
 	if foundService == nil {
 		logger.Info("Service not found...")
-		err := r.createService(desideredService, CRInstance, logger)
+		err := r.createService(desiredService, CRInstance, logger)
 		if err != nil {
 			logger.Error(err, "Error on creating a new Service...")
 			return NotForcedRequeue, err
@@ -275,8 +290,8 @@ func (r *ReconcileCustomResource) handleService(CRInstance *cachev1alpha1.Custom
 		return ForcedRequeue, nil
 	}
 
-	if areServicesDifferent(foundService, desideredService, logger) {
-		err := r.updateService(desideredService, logger)
+	if areServicesDifferent(foundService, desiredService, logger) {
+		err := r.updateService(desiredService, logger)
 		if err != nil {
 			logger.Error(err, "Update Service Error...")
 			return NotForcedRequeue, err
@@ -306,7 +321,7 @@ func (r *ReconcileCustomResource) createService(service *corev1.Service, CRInsta
 	return r.client.Create(context.TODO(), service)
 }
 
-func areServicesDifferent(currentService *corev1.Service, desideredService *corev1.Service, logger logr.Logger) bool {
+func areServicesDifferent(currentService *corev1.Service, desiredService *corev1.Service, logger logr.Logger) bool {
 	result := false
 	return result
 }
@@ -316,11 +331,76 @@ func (r *ReconcileCustomResource) updateService(service *corev1.Service, logger 
 	return r.client.Update(context.TODO(), service)
 }
 
-func (r *ReconcileCustomResource) newDeploymentForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1.Deployment {
+func (r *ReconcileCustomResource) handlePVC(CRInstance *cachev1alpha1.CustomResource) (bool, error) {
+	const NotForcedRequeue = false
+	const ForcedRequeue = true
+
+	desiredPVC := newPVCForCR(CRInstance)
+	logger := log.WithValues("PVC.Namespace", desiredPVC.Namespace, "PVC.Name", desiredPVC.Name)
+
+	foundPVC, err := r.fetchPVC(desiredPVC)
+	if err != nil {
+		logger.Error(err, "Error on fetch the PVC...")
+		return NotForcedRequeue, err
+	}
+	if foundPVC == nil {
+		logger.Info("PVC not found...")
+		err := r.createPVC(desiredPVC, CRInstance, logger)
+		if err != nil {
+			logger.Error(err, "Error on creating a new PVC...")
+			return NotForcedRequeue, err
+		}
+		logger.Info("Created the new PVC")
+		return ForcedRequeue, nil
+	}
+
+	if arePVCsDifferent(foundPVC, desiredPVC, logger) {
+		err := r.updatePVC(desiredPVC, logger)
+		if err != nil {
+			logger.Error(err, "Update PVC Error...")
+			return NotForcedRequeue, err
+		}
+		logger.Info("Updated the PVC...")
+	}
+
+	return NotForcedRequeue, nil
+}
+
+func (r *ReconcileCustomResource) fetchPVC(PVC *corev1.PersistentVolumeClaim) (*corev1.PersistentVolumeClaim, error) {
+	found := &corev1.PersistentVolumeClaim{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: PVC.Name, Namespace: PVC.Namespace}, found)
+	if err != nil && errors.IsNotFound(err) {
+		return nil, nil
+	}
+	return found, err
+}
+
+func (r *ReconcileCustomResource) createPVC(PVC *corev1.PersistentVolumeClaim, CRInstance *cachev1alpha1.CustomResource, logger logr.Logger) error {
+	logger.Info("Creating a new PVC...")
+	err := r.setOwnership(CRInstance, PVC)
+	if err != nil {
+		logger.Error(err, "Error on setting the ownership...")
+		return err
+	}
+	return r.client.Create(context.TODO(), PVC)
+}
+
+func arePVCsDifferent(currentPVC *corev1.PersistentVolumeClaim, desiredPVC *corev1.PersistentVolumeClaim, logger logr.Logger) bool {
+	result := false
+	return result
+}
+
+func (r *ReconcileCustomResource) updatePVC(PVC *corev1.PersistentVolumeClaim, logger logr.Logger) error {
+	logger.Info("Updating the Persistent Volume Claim...")
+	return r.client.Update(context.TODO(), PVC)
+}
+
+func newDeploymentForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1.Deployment {
 	labels := labelsForApp(CRInstance)
 	replicas := CRInstance.Spec.Size
 	version := CRInstance.Spec.Version
 	labelsWithVersion := labelsForAppWithVersion(CRInstance, version)
+	volumeName := "polkadot-data"
 
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -338,9 +418,21 @@ func (r *ReconcileCustomResource) newDeploymentForCR(CRInstance *cachev1alpha1.C
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
+					Volumes: []corev1.Volume{{
+						Name:         volumeName,
+						VolumeSource: corev1.VolumeSource{
+							PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+								ClaimName: getPVCName(CRInstance),
+							},
+						},
+					}},
 					Containers: []corev1.Container{{
 						Name:  "polkadot",
 						Image: "chevdor/polkadot:" + version,
+						VolumeMounts: []corev1.VolumeMount{{
+							Name: volumeName,
+							MountPath: "/data",
+						}},
 						Command: []string{
 							"polkadot", "--name", "Ironoa", "--rpc-external", "--rpc-cors=all",
 						},
@@ -362,12 +454,12 @@ func (r *ReconcileCustomResource) newDeploymentForCR(CRInstance *cachev1alpha1.C
 	}
 }
 
-func (r *ReconcileCustomResource) newServiceForCR(cr *cachev1alpha1.CustomResource) *corev1.Service {
-	labels := labelsForApp(cr)
+func newServiceForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.Service {
+	labels := labelsForApp(CRInstance)
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-service",
-			Namespace: cr.Namespace,
+			Name:      CRInstance.Name + "-service",
+			Namespace: CRInstance.Namespace,
 			Labels:    labels,
 		},
 		Spec: corev1.ServiceSpec{
@@ -393,6 +485,29 @@ func (r *ReconcileCustomResource) newServiceForCR(cr *cachev1alpha1.CustomResour
 				},
 			},
 			Selector: labels,
+		},
+	}
+}
+
+func newPVCForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.PersistentVolumeClaim {
+	labels := labelsForApp(CRInstance)
+	storageClassName := "manual"
+	return &corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      getPVCName(CRInstance),
+			Namespace: CRInstance.Namespace,
+			Labels:    labels,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			StorageClassName: &storageClassName,
+			AccessModes: []corev1.PersistentVolumeAccessMode{
+				corev1.ReadWriteOnce,
+			},
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceStorage: resource.MustParse("2Gi"),
+				},
+			},
 		},
 	}
 }
@@ -423,4 +538,8 @@ func serverLabels(cr *cachev1alpha1.CustomResource) map[string]string {
 		labels[k] = v
 	}
 	return labels
+}
+
+func getPVCName(CRInstance *cachev1alpha1.CustomResource) string {
+	return CRInstance.Name + "-pvc"
 }

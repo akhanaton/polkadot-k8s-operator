@@ -491,7 +491,7 @@ func newServiceForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.Service {
 
 func newPVCForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.PersistentVolumeClaim {
 	labels := labelsForApp(CRInstance)
-	storageClassName := "manual"
+	storageClassName := "polkadot"
 	return &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      getPVCName(CRInstance),

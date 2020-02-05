@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: polkadot-deployment
   labels:
@@ -9,26 +9,34 @@ spec:
   selector:
     matchLabels:
       app: polkadot
+  serviceName: polkadot
+  volumeClaimTemplates:
+    - metadata:
+        name: polkadot-volume
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 4Gi
+        storageClassName: polkadot
   template:
     metadata:
       labels:
         app: polkadot
     spec:
-      volumes:
-        - name: polkadot-db
-          persistentVolumeClaim:
-            claimName: task-pv-claim
       containers:
         - name: polkadot
-          image: chevdor/polkadot
           resources:
             limits:
               memory: "512Mi"
               cpu: "500m"
-          command: ["polkadot", "--name", "Ironoa", "--rpc-external", "--rpc-cors=all"]
+          image: parity/polkadot
+          command: ["polkadot", "--name", "Ironoa", "--unsafe-rpc-external", "--rpc-cors=all", "--wasm-execution=Compiled", "--execution=wasm"]
+          #command: ["polkadot", "--name", "Ironoa", "--unsafe-rpc-external", "--rpc-cors=all", "--wasm-execution=Compiled", "--execution=wasm", "--validator"]
           volumeMounts:
             - mountPath: "/data"
-              name: polkadot-db
+              name: polkadot-volume
           ports:
             - containerPort: 30333
             - containerPort: 9933

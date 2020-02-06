@@ -31,17 +31,17 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
-          image: parity/polkadot
+          image: chevdor/polkadot
           command: [
             "polkadot",
             "--sentry",
-            "--node-key", "0000000000000000000000000000000000000000000000000000000000000003", # Local node id: QmV7EhW6J6KgmNdr558RH1mPx2xGGznW7At4BhXzntRFsi
-            "--reserved-nodes", "/dns4/polkadot-service-validator/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR",
+            "--node-key", "0000000000000000000000000000000000000000000000000000000000000013", # Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
+            "--reserved-nodes", "/dns4/polkadot-service-validator/tcp/30333/p2p/QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM",
             "--name", "IronoaSentry",
-            "--unsafe-rpc-external",
-            "--unsafe-ws-external",
-            "--rpc-cors=all",
-            "--no-telemetry",
+            #"--unsafe-rpc-external",
+            #"--unsafe-ws-external",
+            #"--rpc-cors=all",
+            #"--no-telemetry",
           ]
           volumeMounts:
             - mountPath: "/data"
@@ -106,18 +106,18 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
-          image: parity/polkadot
+          image: chevdor/polkadot
           command: [
             "polkadot",
             "--validator",
-            "--node-key", "0000000000000000000000000000000000000000000000000000000000000001", # Local node id: QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR
+            "--node-key", "0000000000000000000000000000000000000000000000000000000000000021", # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
             "--reserved-only",
-            "--reserved-nodes", "/dns4/polkadot-service-sentry/tcp/30333/p2p/QmV7EhW6J6KgmNdr558RH1mPx2xGGznW7At4BhXzntRFsi",
+            "--reserved-nodes", "/dns4/polkadot-service-sentry/tcp/30333/p2p/QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm",
             "--name", "IronoaValidator",
-            "--unsafe-rpc-external",
-            "--unsafe-ws-external",
-            "--rpc-cors=all",
-            "--no-telemetry",
+            #"--unsafe-rpc-external",
+            #"--unsafe-ws-external",
+            #"--rpc-cors=all",
+            #"--no-telemetry",
           ]
           volumeMounts:
             - mountPath: "/data"

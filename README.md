@@ -1,2 +1,3 @@
-# kubernetes-customresource-operator
-Kubernetes Operator pattern for a Polkadot Validator Custom Resource
+# PolkaKops - Kubernetes Operator in the Polkadot Network
+
+Kubernetes Operator for sentry nodes and validators

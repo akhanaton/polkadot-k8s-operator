@@ -5,9 +5,9 @@ metadata:
   labels:
     type: local
 spec:
-  storageClassName: polkadot
+  storageClassName: default
   capacity:
-    storage: 4Gi
+    storage: 5Gi
   accessModes:
     - ReadWriteOnce
   hostPath:

@@ -17,6 +17,7 @@ func newSentryStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1
 	volumeName := "polkadot-volume"
 	storageClassName := "default"
 	serviceName := "polkadot"
+	clientName := "Ironoa"
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -61,22 +62,45 @@ func newSentryStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1
 							"--sentry",
 							"--node-key", "0000000000000000000000000000000000000000000000000000000000000013", // Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
 							"--reserved-nodes", "/dns4/polkadot-service-validator/tcp/30333/p2p/QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM",
-							"--name", "IronoaSentry",
-							//"--unsafe-rpc-external",
-							//"--unsafe-ws-external",
-							//"--rpc-cors=all",
+							"--name", clientName+"Sentry",
+							"--unsafe-rpc-external", //TODO check the unsafeness
+							"--unsafe-ws-external",
+							"--rpc-cors=all",
 							"--no-telemetry",
 						},
 						Ports: []corev1.ContainerPort{
 							{
 								ContainerPort: 30333,
+								Name: "p2p",
 							},
 							{
 								ContainerPort: 9933,
+								Name: "http-rpc",
 							},
 							{
 								ContainerPort: 9944,
+								Name: "websocket-rpc",
 							},
+						},
+						ReadinessProbe: &corev1.Probe{
+							Handler:             corev1.Handler{
+								HTTPGet: &corev1.HTTPGetAction{
+									Path: "/health",
+									Port: intstr.IntOrString{Type: intstr.String, StrVal:"http-rpc"},
+								},
+							},
+							InitialDelaySeconds: 10,
+							PeriodSeconds:       10,
+						},
+						LivenessProbe: &corev1.Probe{
+							Handler:             corev1.Handler{
+								HTTPGet: &corev1.HTTPGetAction{
+									Path: "/health",
+									Port: intstr.IntOrString{Type: intstr.String, StrVal:"http-rpc"},
+								},
+							},
+							InitialDelaySeconds: 10,
+							PeriodSeconds:       10,
 						},
 					}},
 				},
@@ -93,6 +117,7 @@ func newValidatorStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *app
 	volumeName := "polkadot-volume"
 	storageClassName := "default"
 	serviceName := "polkadot"
+	clientName := "Ironoa"
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -138,81 +163,45 @@ func newValidatorStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *app
 							"--node-key", "0000000000000000000000000000000000000000000000000000000000000021", // Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
 							"--reserved-only",
 							"--reserved-nodes", "/dns4/polkadot-service-sentry/tcp/30333/p2p/QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm",
-							"--name", "IronoaValidator",
-							//"--unsafe-rpc-external",
-							//"--unsafe-ws-external",
-							//"--rpc-cors=all",
+							"--name", clientName+"Validator",
+							"--unsafe-rpc-external", //TODO check the unsafeness
+							"--unsafe-ws-external",
+							"--rpc-cors=all",
 							"--no-telemetry",
 						},
 						Ports: []corev1.ContainerPort{
 							{
 								ContainerPort: 30333,
+								Name: "p2p",
 							},
 							{
 								ContainerPort: 9933,
+								Name: "http-rpc",
 							},
 							{
 								ContainerPort: 9944,
+								Name: "websocket-rpc",
 							},
 						},
-					}},
-				},
-			},
-		},
-	}
-}
-
-func newDeploymentForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1.Deployment {
-	labels := labelsForApp(CRInstance)
-	replicas := CRInstance.Spec.Size
-	version := CRInstance.Spec.Version
-	labelsWithVersion := labelsForAppWithVersion(CRInstance, version)
-	volumeName := "polkadot-data"
-
-	return &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      CRInstance.Name + "-deployment",
-			Namespace: CRInstance.Namespace,
-			Labels:    labelsWithVersion,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: &replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: corev1.PodSpec{
-					Volumes: []corev1.Volume{{
-						Name:         volumeName,
-						VolumeSource: corev1.VolumeSource{
-							PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-								ClaimName: getPVCName(CRInstance),
+						ReadinessProbe: &corev1.Probe{
+							Handler:             corev1.Handler{
+								HTTPGet: &corev1.HTTPGetAction{
+									Path: "/health",
+									Port: intstr.IntOrString{Type: intstr.String, StrVal:"http-rpc"},
+								},
 							},
+							InitialDelaySeconds: 10,
+							PeriodSeconds:       10,
 						},
-					}},
-					Containers: []corev1.Container{{
-						Name:  "polkadot",
-						Image: "chevdor/polkadot:" + version,
-						VolumeMounts: []corev1.VolumeMount{{
-							Name: volumeName,
-							MountPath: "/data",
-						}},
-						Command: []string{
-							"polkadot", "--name", "Ironoa", "--rpc-external", "--rpc-cors=all",
-						},
-						Ports: []corev1.ContainerPort{
-							{
-								ContainerPort: 30333,
+						LivenessProbe: &corev1.Probe{
+							Handler:             corev1.Handler{
+								HTTPGet: &corev1.HTTPGetAction{
+									Path: "/health",
+									Port: intstr.IntOrString{Type: intstr.String, StrVal:"http-rpc"},
+								},
 							},
-							{
-								ContainerPort: 9933,
-							},
-							{
-								ContainerPort: 9944,
-							},
+							InitialDelaySeconds: 10,
+							PeriodSeconds:       10,
 						},
 					}},
 				},
@@ -239,13 +228,13 @@ func newSentryServiceForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.Ser
 					Protocol:   "TCP",
 				},
 				{
-					Name:       "rpc",
+					Name:       "http-rpc",
 					Port:       9933,
 					TargetPort: intstr.FromInt(9933),
 					Protocol:   "TCP",
 				},
 				{
-					Name:       "to-be-defined-c",
+					Name:       "websocket-rpc",
 					Port:       9944,
 					TargetPort: intstr.FromInt(9944),
 					Protocol:   "TCP",
@@ -274,77 +263,19 @@ func newValidatorServiceForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.
 					Protocol:   "TCP",
 				},
 				{
-					Name:       "rpc",
+					Name:       "http-rpc",
 					Port:       9933,
 					TargetPort: intstr.FromInt(9933),
 					Protocol:   "TCP",
 				},
 				{
-					Name:       "to-be-defined-c",
+					Name:       "websocket-rpc",
 					Port:       9944,
 					TargetPort: intstr.FromInt(9944),
 					Protocol:   "TCP",
 				},
 			},
 			Selector: labels,
-		},
-	}
-}
-
-func newServiceForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.Service {
-	labels := labelsForApp(CRInstance)
-	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      CRInstance.Name + "-service-sentry",
-			Namespace: CRInstance.Namespace,
-			Labels:    labels,
-		},
-		Spec: corev1.ServiceSpec{
-			Type: corev1.ServiceTypeNodePort,
-			Ports: []corev1.ServicePort{
-				{
-					Name:       "p2p",
-					Port:       30333,
-					TargetPort: intstr.FromInt(30333),
-					Protocol:   "TCP",
-				},
-				{
-					Name:       "rpc",
-					Port:       9933,
-					TargetPort: intstr.FromInt(9933),
-					Protocol:   "TCP",
-				},
-				{
-					Name:       "to-be-defined-c",
-					Port:       9944,
-					TargetPort: intstr.FromInt(9944),
-					Protocol:   "TCP",
-				},
-			},
-			Selector: labels,
-		},
-	}
-}
-
-func newPVCForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.PersistentVolumeClaim {
-	labels := labelsForApp(CRInstance)
-	storageClassName := "polkadot"
-	return &corev1.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      getPVCName(CRInstance),
-			Namespace: CRInstance.Namespace,
-			Labels:    labels,
-		},
-		Spec: corev1.PersistentVolumeClaimSpec{
-			StorageClassName: &storageClassName,
-			AccessModes: []corev1.PersistentVolumeAccessMode{
-				corev1.ReadWriteOnce,
-			},
-			Resources: corev1.ResourceRequirements{
-				Requests: corev1.ResourceList{
-					corev1.ResourceStorage: resource.MustParse("2Gi"),
-				},
-			},
 		},
 	}
 }

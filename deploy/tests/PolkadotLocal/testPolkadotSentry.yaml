@@ -38,18 +38,33 @@ spec:
             "--node-key", "0000000000000000000000000000000000000000000000000000000000000013", # Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
             "--reserved-nodes", "/dns4/polkadot-service-validator/tcp/30333/p2p/QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM",
             "--name", "IronoaSentry",
-            #"--unsafe-rpc-external",
-            #"--unsafe-ws-external",
-            #"--rpc-cors=all",
-            #"--no-telemetry",
+            "--unsafe-rpc-external",
+            "--unsafe-ws-external",
+            "--rpc-cors=all",
+            "--no-telemetry",
           ]
           volumeMounts:
             - mountPath: "/data"
               name: polkadot-volume
           ports:
             - containerPort: 30333
+              name: p2p
             - containerPort: 9933
+              name: http-rpc
             - containerPort: 9944
+              name: websocket-rpc
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http-rpc
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http-rpc
+            initialDelaySeconds: 10
+            periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service
@@ -63,15 +78,15 @@ spec:
     - protocol: TCP
       port: 30333
       targetPort: 30333
-      name: a
+      name: p2p
     - protocol: TCP
       port: 9933
       targetPort: 9933 
-      name: b
+      name: http-rpc
     - protocol: TCP
       port: 9944
-      targetPort: 9933  
-      name: c
+      targetPort: 9944
+      name: websocket-rpc
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -124,8 +139,23 @@ spec:
               name: polkadot-volume
           ports:
             - containerPort: 30333
+              name: p2p
             - containerPort: 9933
+              name: http-rpc
             - containerPort: 9944
+              name: websocket-rpc
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http-rpc
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http-rpc
+            initialDelaySeconds: 10
+            periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service
@@ -139,15 +169,15 @@ spec:
     - protocol: TCP
       port: 30333
       targetPort: 30333
-      name: a
+      name: p2p
     - protocol: TCP
       port: 9933
       targetPort: 9933
-      name: b
+      name: http-rpc
     - protocol: TCP
       port: 9944
-      targetPort: 9933
-      name: c
+      targetPort: 9944
+      name: websocket-rpc
 ---
 #TODO test with minikube Cilium
 #apiVersion: networking.k8s.io/v1

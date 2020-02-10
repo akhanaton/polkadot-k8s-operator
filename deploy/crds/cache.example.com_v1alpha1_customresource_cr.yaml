@@ -3,6 +3,5 @@ kind: CustomResource
 metadata:
   name: polkadot-customresource
 spec:
-  # Add fields here
-  size: 2
+  replicaSize: 2
   version: latest

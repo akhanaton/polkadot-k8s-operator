@@ -11,13 +11,15 @@ import (
 
 func newSentryStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1.StatefulSet {
 	labels := labelsForSentry()
-	replicas := CRInstance.Spec.Size
+	replicas := CRInstance.Spec.Replicas
 	version := CRInstance.Spec.Version
 	labelsWithVersion := labelsForSentryWithVersion(version)
 	volumeName := "polkadot-volume"
 	storageClassName := "default"
 	serviceName := "polkadot"
 	clientName := "Ironoa"
+	nodeKey := "0000000000000000000000000000000000000000000000000000000000000013" // Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
+	reservedValidatorID := "QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM"
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -60,8 +62,8 @@ func newSentryStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1
 						Command: []string{
 							"polkadot",
 							"--sentry",
-							"--node-key", "0000000000000000000000000000000000000000000000000000000000000013", // Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
-							"--reserved-nodes", "/dns4/polkadot-service-validator/tcp/30333/p2p/QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM",
+							"--node-key", nodeKey,
+							"--reserved-nodes", "/dns4/polkadot-service-validator/tcp/30333/p2p/" + reservedValidatorID,
 							"--name", clientName+"Sentry",
 							"--unsafe-rpc-external", //TODO check the unsafeness
 							"--unsafe-ws-external",
@@ -118,6 +120,8 @@ func newValidatorStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *app
 	storageClassName := "default"
 	serviceName := "polkadot"
 	clientName := "Ironoa"
+	nodeKey := "0000000000000000000000000000000000000000000000000000000000000021" // Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
+	reservedSentryID := "QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm"
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -160,9 +164,9 @@ func newValidatorStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *app
 						Command: []string{
 							"polkadot",
 							"--validator",
-							"--node-key", "0000000000000000000000000000000000000000000000000000000000000021", // Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
+							"--node-key", nodeKey,
 							"--reserved-only",
-							"--reserved-nodes", "/dns4/polkadot-service-sentry/tcp/30333/p2p/QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm",
+							"--reserved-nodes", "/dns4/polkadot-service-sentry/tcp/30333/p2p/" + reservedSentryID,
 							"--name", clientName+"Validator",
 							"--unsafe-rpc-external", //TODO check the unsafeness
 							"--unsafe-ws-external",

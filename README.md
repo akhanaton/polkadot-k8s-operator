@@ -1,3 +1,3 @@
-# PolkaKops - Kubernetes Operator in the Polkadot Network
+# PolkaKop - Kubernetes Operator for Polkadot 
 
 Kubernetes Operator for sentry nodes and validators

@@ -1,4 +1,4 @@
-# kubernetes-polkadot-operator
+# Kubernetes-polkadot-operator
 Kubernetes Operator for a Polkadot Custom Resource
 
 ## Requirements
@@ -34,6 +34,8 @@ Allows you to decide what to deploy:
         * In the SentryAndValidator configuration it must be passed also an additional parameter to both the sentry and the validator:
         * reservedValidatorID: (string) Identiry of the validator, it must be set for the sentry
         * reservedSentryID: Identiry of the sentry, it must be set for the validator
+        
+            ![alt text](images/schema.png)
 
 * replicas: (int)
 Allows you to decide how many Sentry replicas will be created. Validator replica size is always hard coded to one and it is not possible to change it to prevent concurrent validation issues.
@@ -62,3 +64,6 @@ To help make it easier to build Kubernetes applications, Red Hat and the Kuberne
 The Operator SDK provides the tools to build, test and package Operators. Initially, the SDK facilitates the marriage of an application’s business logic (for example, how to scale, upgrade, or backup) with the Kubernetes API to execute those operations. 
 
 Reference: https://coreos.com/blog/introducing-operator-framework
+
+
+

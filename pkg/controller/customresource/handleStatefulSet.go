@@ -9,7 +9,28 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *ReconcileCustomResource) handleStatefulSet(CRInstance *cachev1alpha1.CustomResource, desiredResource *appsv1.StatefulSet) (bool, error) {
+func (r *ReconcileCustomResource) handleStatefulSet(CRInstance *cachev1alpha1.CustomResource) (bool, error){
+	const NotForcedRequeue = false
+	const ForcedRequeue = true
+
+	if CRKind(CRInstance.Spec.Kind) == Validator {
+		return r.handleStatefulSetSpecific(CRInstance, newValidatorStatefulSetForCR(CRInstance))
+	}
+	if CRKind(CRInstance.Spec.Kind) == Sentry {
+		return r.handleStatefulSetSpecific(CRInstance, newSentryStatefulSetForCR(CRInstance))
+	}
+	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
+		isForcedRequeue, err := r.handleStatefulSetSpecific(CRInstance, newSentryStatefulSetForCR(CRInstance))
+		if isForcedRequeue == ForcedRequeue || err != nil {
+			return isForcedRequeue, err
+		}
+		return r.handleStatefulSetSpecific(CRInstance, newValidatorStatefulSetForCR(CRInstance))
+	}
+
+	return NotForcedRequeue, nil // TODO handle default
+}
+
+func (r *ReconcileCustomResource) handleStatefulSetSpecific(CRInstance *cachev1alpha1.CustomResource, desiredResource *appsv1.StatefulSet) (bool, error) {
 	const NotForcedRequeue = false
 	const ForcedRequeue = true
 
@@ -34,7 +55,7 @@ func (r *ReconcileCustomResource) handleStatefulSet(CRInstance *cachev1alpha1.Cu
 
 	if areStatefulSetDifferent(foundResource, desiredResource, logger) {
 		logger.Info("Updating the StatefulSet...")
-		err := r.updateStatefulSet(desiredResource, logger)
+		err := r.updateStatefulSet(desiredResource)
 		if err != nil {
 			logger.Error(err, "Update StatefulSet Error...")
 			return NotForcedRequeue, err
@@ -62,6 +83,10 @@ func (r *ReconcileCustomResource) createStatefulSet(statefulSet *appsv1.Stateful
 	}
 	err = r.client.Create(context.TODO(), statefulSet)
 	return err
+}
+
+func (r *ReconcileCustomResource) updateStatefulSet(obj *appsv1.StatefulSet) error {
+	return r.client.Update(context.TODO(), obj)
 }
 
 func areStatefulSetDifferent(current *appsv1.StatefulSet, desired *appsv1.StatefulSet, logger logr.Logger) bool {
@@ -93,8 +118,4 @@ func isStatefulSetVersionDifferent(current *appsv1.StatefulSet, desired *appsv1.
 		return true
 	}
 	return false
-}
-
-func (r *ReconcileCustomResource) updateStatefulSet(obj *appsv1.StatefulSet, logger logr.Logger) error {
-	return r.client.Update(context.TODO(), obj)
 }

@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+spec:
+  podSelector:
+    matchLabels:
+      app: validator
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: sentry
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: sentry

@@ -9,9 +9,28 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
+func (r *ReconcileCustomResource) handleService(CRInstance *cachev1alpha1.CustomResource) (bool, error) {
+	const NotForcedRequeue = false
+	const ForcedRequeue = true
 
+	if CRKind(CRInstance.Spec.Kind) == Validator {
+		return r.handleSpecificService(CRInstance, newValidatorServiceForCR(CRInstance))
+	}
+	if CRKind(CRInstance.Spec.Kind) == Sentry {
+		return r.handleSpecificService(CRInstance, newSentryServiceForCR(CRInstance))
+	}
+	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
+		isForcedRequeue, err := r.handleSpecificService(CRInstance, newSentryServiceForCR(CRInstance))
+		if isForcedRequeue == ForcedRequeue || err != nil {
+			return isForcedRequeue, err
+		}
+		return r.handleSpecificService(CRInstance, newValidatorServiceForCR(CRInstance))
+	}
 
-func (r *ReconcileCustomResource) handleService(CRInstance *cachev1alpha1.CustomResource, desiredService *corev1.Service) (bool, error) {
+	return NotForcedRequeue, nil // TODO handle default
+}
+
+func (r *ReconcileCustomResource) handleSpecificService(CRInstance *cachev1alpha1.CustomResource, desiredService *corev1.Service) (bool, error) {
 	const NotForcedRequeue = false
 	const ForcedRequeue = true
 

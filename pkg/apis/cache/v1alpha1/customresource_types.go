@@ -13,9 +13,27 @@ type CustomResourceSpec struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
-	// Size of the Deployment
+	ClientVersion string `json:"clientVersion"`
+	Kind string `json:"kind"`
+	Validator `json:"validator,omitempty"`
+	Sentry `json:"sentry,omitempty"`
+}
+
+type Validator struct {
+	ClientName string `json:"clientName"`
+	NodeKey string `json:"nodeKey"`
+	ReservedSentryID string `json:"reservedSentryID,omitempty"`
+	CPULimit string `json:"CPULimit,omitempty"`
+	MemoryLimit string `json:"memoryLimit,omitempty"`
+}
+
+type Sentry struct {
 	Replicas int32 `json:"replicas"`
-	Version string `json:"version"`
+	ClientName string `json:"clientName"`
+	NodeKey string `json:"nodeKey"`
+	ReservedValidatorID string `json:"reservedValidatorID,omitempty"`
+	CPULimit string `json:"CPULimit,omitempty"`
+	MemoryLimit string `json:"memoryLimit,omitempty"`
 }
 
 // CustomResourceStatus defines the observed state of CustomResource

@@ -10,20 +10,37 @@ import (
 )
 
 func newSentryStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1.StatefulSet {
-	labels := labelsForSentry()
-	replicas := CRInstance.Spec.Replicas
-	version := CRInstance.Spec.Version
-	labelsWithVersion := labelsForSentryWithVersion(version)
+	replicas := CRInstance.Spec.Sentry.Replicas
+	version := CRInstance.Spec.ClientVersion
+	clientName := CRInstance.Spec.Sentry.ClientName
+	nodeKey := CRInstance.Spec.Sentry.NodeKey
+	CPULimit := CRInstance.Spec.Validator.CPULimit
+	memoryLimit := CRInstance.Spec.Validator.MemoryLimit
 	volumeName := "polkadot-volume"
 	storageClassName := "default"
 	serviceName := "polkadot"
-	clientName := "Ironoa"
-	nodeKey := "0000000000000000000000000000000000000000000000000000000000000013" // Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
-	reservedValidatorID := "QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM"
+
+	labels := getSentrylabels()
+	labelsWithVersion := getCopyLabelsWithVersion(labels,version)
+
+	commands := []string{
+		"polkadot",
+		"--sentry",
+		"--node-key", nodeKey,
+		"--name", clientName,
+		"--unsafe-rpc-external", //TODO check the unsafeness
+		"--unsafe-ws-external",
+		"--rpc-cors=all",
+		"--no-telemetry",
+	}
+	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
+		reservedValidatorID := CRInstance.Spec.Sentry.ReservedValidatorID
+		commands = append(commands,"--reserved-nodes", "/dns4/polkadot-service-validator/tcp/30333/p2p/" + reservedValidatorID)
+	}
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      CRInstance.Name + "-set-" + "sentry",
+			Name:       "polkadot-statefulset-" + "sentry",
 			Namespace: CRInstance.Namespace,
 			Labels:    labelsWithVersion,
 		},
@@ -59,17 +76,7 @@ func newSentryStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1
 							Name: volumeName,
 							MountPath: "/data",
 						}},
-						Command: []string{
-							"polkadot",
-							"--sentry",
-							"--node-key", nodeKey,
-							"--reserved-nodes", "/dns4/polkadot-service-validator/tcp/30333/p2p/" + reservedValidatorID,
-							"--name", clientName+"Sentry",
-							"--unsafe-rpc-external", //TODO check the unsafeness
-							"--unsafe-ws-external",
-							"--rpc-cors=all",
-							"--no-telemetry",
-						},
+						Command: commands,
 						Ports: []corev1.ContainerPort{
 							{
 								ContainerPort: 30333,
@@ -84,16 +91,16 @@ func newSentryStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1
 								Name: "websocket-rpc",
 							},
 						},
-						ReadinessProbe: &corev1.Probe{
-							Handler:             corev1.Handler{
-								HTTPGet: &corev1.HTTPGetAction{
-									Path: "/health",
-									Port: intstr.IntOrString{Type: intstr.String, StrVal:"http-rpc"},
-								},
-							},
-							InitialDelaySeconds: 10,
-							PeriodSeconds:       10,
-						},
+						//ReadinessProbe: &corev1.Probe{
+						//	Handler:             corev1.Handler{
+						//		HTTPGet: &corev1.HTTPGetAction{
+						//			Path: "/health",
+						//			Port: intstr.IntOrString{Type: intstr.String, StrVal:"http-rpc"},
+						//		},
+						//	},
+						//	InitialDelaySeconds: 10,
+						//	PeriodSeconds:       10,
+						//},
 						LivenessProbe: &corev1.Probe{
 							Handler:             corev1.Handler{
 								HTTPGet: &corev1.HTTPGetAction{
@@ -103,6 +110,12 @@ func newSentryStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1
 							},
 							InitialDelaySeconds: 10,
 							PeriodSeconds:       10,
+						},
+						Resources: corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								"cpu": resource.MustParse(CPULimit),
+								"memory": resource.MustParse(memoryLimit),
+							},
 						},
 					}},
 				},
@@ -112,20 +125,39 @@ func newSentryStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1
 }
 
 func newValidatorStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1.StatefulSet {
-	labels := labelsForValidator()
 	replicas := int32(1)
-	version := CRInstance.Spec.Version
-	labelsWithVersion := labelsForValidatorWithVersion(version)
+	version := CRInstance.Spec.ClientVersion
+	clientName := CRInstance.Spec.Validator.ClientName
+	nodeKey := CRInstance.Spec.Validator.NodeKey
+	CPULimit := CRInstance.Spec.Validator.CPULimit
+	memoryLimit := CRInstance.Spec.Validator.MemoryLimit
 	volumeName := "polkadot-volume"
 	storageClassName := "default"
 	serviceName := "polkadot"
-	clientName := "Ironoa"
-	nodeKey := "0000000000000000000000000000000000000000000000000000000000000021" // Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
-	reservedSentryID := "QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm"
+
+	labels := getValidatorLabels()
+	labelsWithVersion := getCopyLabelsWithVersion(labels,version)
+
+	commands := []string{
+		"polkadot",
+		"--validator",
+		"--node-key", nodeKey,
+		"--name", clientName,
+		"--unsafe-rpc-external", //TODO check the unsafeness
+		"--unsafe-ws-external",
+		"--rpc-cors=all",
+		"--no-telemetry",
+	}
+	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
+		reservedSentryID := CRInstance.Spec.Validator.ReservedSentryID
+		commands = append(commands,
+			"--reserved-only",
+			"--reserved-nodes", "/dns4/polkadot-service-sentry/tcp/30333/p2p/" + reservedSentryID)
+	}
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      CRInstance.Name + "-set-" + "validator",
+			Name:      "polkadot-statefulset-" + "validator",
 			Namespace: CRInstance.Namespace,
 			Labels:    labelsWithVersion,
 		},
@@ -161,18 +193,7 @@ func newValidatorStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *app
 							Name: volumeName,
 							MountPath: "/data",
 						}},
-						Command: []string{
-							"polkadot",
-							"--validator",
-							"--node-key", nodeKey,
-							"--reserved-only",
-							"--reserved-nodes", "/dns4/polkadot-service-sentry/tcp/30333/p2p/" + reservedSentryID,
-							"--name", clientName+"Validator",
-							"--unsafe-rpc-external", //TODO check the unsafeness
-							"--unsafe-ws-external",
-							"--rpc-cors=all",
-							"--no-telemetry",
-						},
+						Command: commands,
 						Ports: []corev1.ContainerPort{
 							{
 								ContainerPort: 30333,
@@ -187,25 +208,31 @@ func newValidatorStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *app
 								Name: "websocket-rpc",
 							},
 						},
-						ReadinessProbe: &corev1.Probe{
+						//ReadinessProbe: &corev1.Probe{
+						//	Handler:             corev1.Handler{
+						//		HTTPGet: &corev1.HTTPGetAction{
+						//			Path: "/health",
+						//			Port: intstr.IntOrString{Type: intstr.String, StrVal:"http-rpc"},
+						//		},
+						//	},
+						//	InitialDelaySeconds: 10,
+						//	PeriodSeconds:       10,
+						//},
+						LivenessProbe: &corev1.Probe{
 							Handler:             corev1.Handler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path: "/health",
-									Port: intstr.IntOrString{Type: intstr.String, StrVal:"http-rpc"},
+									Port: intstr.IntOrString{Type: intstr.Int, IntVal: 9933},
 								},
 							},
 							InitialDelaySeconds: 10,
 							PeriodSeconds:       10,
 						},
-						LivenessProbe: &corev1.Probe{
-							Handler:             corev1.Handler{
-								HTTPGet: &corev1.HTTPGetAction{
-									Path: "/health",
-									Port: intstr.IntOrString{Type: intstr.String, StrVal:"http-rpc"},
-								},
+						Resources: corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								"cpu": resource.MustParse(CPULimit),
+								"memory": resource.MustParse(memoryLimit),
 							},
-							InitialDelaySeconds: 10,
-							PeriodSeconds:       10,
 						},
 					}},
 				},
@@ -215,10 +242,10 @@ func newValidatorStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *app
 }
 
 func newSentryServiceForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.Service {
-	labels := labelsForSentry()
+	labels := getSentrylabels()
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      CRInstance.Name + "-service-sentry",
+			Name:      "polkadot-service-sentry",
 			Namespace: CRInstance.Namespace,
 			Labels:    labels,
 		},
@@ -250,15 +277,19 @@ func newSentryServiceForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.Ser
 }
 
 func newValidatorServiceForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.Service {
-	labels := labelsForValidator()
+	labels := getValidatorLabels()
+	serviceType := corev1.ServiceTypeClusterIP
+	if CRKind(CRInstance.Spec.Kind) == Validator {
+		serviceType = corev1.ServiceTypeNodePort
+	}
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      CRInstance.Name + "-service-validator",
+			Name:      "polkadot-service-validator",
 			Namespace: CRInstance.Namespace,
 			Labels:    labels,
 		},
 		Spec: corev1.ServiceSpec{
-			Type: corev1.ServiceTypeClusterIP,
+			Type: serviceType,
 			Ports: []corev1.ServicePort{
 				{
 					Name:       "p2p",
@@ -284,58 +315,37 @@ func newValidatorServiceForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.
 	}
 }
 
-func labelsForSentry() map[string]string {
-	labels := map[string]string{"app":"sentry"}
-	labels["app"] = "sentry"
+//func newNetworkPolicyForValidatorCR(CRInstance *cachev1alpha1.CustomResource) *v1.NetworkPolicy {
+
+//}
+
+func getAppLabels() map[string]string{
+	labels:= map[string]string{"app":"polkadot"}
 	return labels
 }
 
-func labelsForSentryWithVersion(version string) map[string]string {
-	labels := labelsForSentry()
-	labels["version"] = version
+func getSentrylabels() map[string]string {
+	labels := getAppLabels()
+	labels["role"] = "sentry"
 	return labels
 }
 
-func labelsForValidator() map[string]string {
-	labels := map[string]string{"app":"validator"}
-	labels["app"] = "sentry"
-	return labels
+func getCopyLabelsWithVersion(labels map[string]string, version string) map[string]string {
+	newLabels := getCopy(labels)
+	newLabels["version"] = version
+	return newLabels
 }
 
-func labelsForValidatorWithVersion(version string) map[string]string {
-	labels := labelsForSentry()
-	labels["version"] = version
-	return labels
-}
-
-// labelsForApp creates a simple set of labels for App.
-func labelsForApp(cr *cachev1alpha1.CustomResource) map[string]string {
-	return map[string]string{"app": cr.Name, "app_cr": cr.Name}
-}
-
-func labelsForAppWithVersion(cr *cachev1alpha1.CustomResource, version string) map[string]string {
-	labels := labelsForApp(cr)
-	labels["version"] = version
-	return labels
-}
-
-func matchingLabels(cr *cachev1alpha1.CustomResource) map[string]string {
-	return map[string]string{
-		"app":    cr.Name,
-		"server": cr.Name,
+func getCopy(originalMap map[string]string) map[string]string {
+	newMap := make(map[string]string)
+	for key, value := range originalMap {
+		newMap[key] = value
 	}
+	return newMap
 }
 
-func serverLabels(cr *cachev1alpha1.CustomResource) map[string]string {
-	labels := map[string]string{
-		"version": cr.Spec.Version,
-	}
-	for k, v := range matchingLabels(cr) {
-		labels[k] = v
-	}
+func getValidatorLabels() map[string]string {
+	labels := getAppLabels()
+	labels["role"] = "validator"
 	return labels
-}
-
-func getPVCName(CRInstance *cachev1alpha1.CustomResource) string {
-	return CRInstance.Name + "-pvc"
 }

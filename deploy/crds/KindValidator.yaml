@@ -1,0 +1,12 @@
+apiVersion: cache.example.com/v1alpha1
+kind: CustomResource
+metadata:
+  name: polkadot-customresource
+spec:
+  clientVersion: latest
+  kind: "Validator" # TODO define a check
+  validator:
+    clientName: "IronoaValidator"
+    nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
+    CPULimit: "0.5"
+    memoryLimit: "500Mi"

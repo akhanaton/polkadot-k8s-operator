@@ -93,7 +93,7 @@ func (r *ReconcileCustomResource) Reconcile(request reconcile.Request) (reconcil
 		return handleRequeueStd(err, logger)
 	}
 
-	isRequeueForced, err := r.handleStatefulSet(handledCRInstance, newSentryStatefulSetForCR(handledCRInstance))
+	isRequeueForced, err := r.handleStatefulSet(handledCRInstance)
 	if err != nil {
 		return handleRequeueError(err,logger)
 	}
@@ -101,23 +101,7 @@ func (r *ReconcileCustomResource) Reconcile(request reconcile.Request) (reconcil
 		return handleRequeueForced(err, logger)
 	}
 
-	isRequeueForced, err = r.handleStatefulSet(handledCRInstance, newValidatorStatefulSetForCR(handledCRInstance))
-	if err != nil {
-		return handleRequeueError(err,logger)
-	}
-	if isRequeueForced {
-		return handleRequeueForced(err, logger)
-	}
-
-	isRequeueForced, err = r.handleService(handledCRInstance, newSentryServiceForCR(handledCRInstance))
-	if err != nil {
-		return handleRequeueError(err,logger)
-	}
-	if isRequeueForced {
-		return handleRequeueForced(err, logger)
-	}
-
-	isRequeueForced, err = r.handleService(handledCRInstance, newValidatorServiceForCR(handledCRInstance))
+	isRequeueForced, err = r.handleService(handledCRInstance)
 	if err != nil {
 		return handleRequeueError(err,logger)
 	}

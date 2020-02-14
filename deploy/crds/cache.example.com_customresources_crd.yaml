@@ -31,15 +31,49 @@ spec:
         spec:
           description: CustomResourceSpec defines the desired state of CustomResource
           properties:
-            size:
-              description: Size of the Deployment
-              format: int32
-              type: integer
-            version:
+            clientVersion:
               type: string
+            kind:
+              type: string
+            sentry:
+              properties:
+                CPULimit:
+                  type: string
+                clientName:
+                  type: string
+                memoryLimit:
+                  type: string
+                nodeKey:
+                  type: string
+                replicas:
+                  format: int32
+                  type: integer
+                reservedValidatorID:
+                  type: string
+              required:
+              - clientName
+              - nodeKey
+              - replicas
+              type: object
+            validator:
+              properties:
+                CPULimit:
+                  type: string
+                clientName:
+                  type: string
+                memoryLimit:
+                  type: string
+                nodeKey:
+                  type: string
+                reservedSentryID:
+                  type: string
+              required:
+              - clientName
+              - nodeKey
+              type: object
           required:
-          - size
-          - version
+          - clientVersion
+          - kind
           type: object
         status:
           description: CustomResourceStatus defines the observed state of CustomResource

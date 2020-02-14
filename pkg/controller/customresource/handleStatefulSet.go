@@ -10,8 +10,6 @@ import (
 )
 
 func (r *ReconcileCustomResource) handleStatefulSet(CRInstance *cachev1alpha1.CustomResource) (bool, error){
-	const NotForcedRequeue = false
-	const ForcedRequeue = true
 
 	if CRKind(CRInstance.Spec.Kind) == Validator {
 		return r.handleStatefulSetSpecific(CRInstance, newValidatorStatefulSetForCR(CRInstance))
@@ -27,12 +25,10 @@ func (r *ReconcileCustomResource) handleStatefulSet(CRInstance *cachev1alpha1.Cu
 		return r.handleStatefulSetSpecific(CRInstance, newValidatorStatefulSetForCR(CRInstance))
 	}
 
-	return NotForcedRequeue, nil // TODO handle default
+	return defaultHandler()
 }
 
 func (r *ReconcileCustomResource) handleStatefulSetSpecific(CRInstance *cachev1alpha1.CustomResource, desiredResource *appsv1.StatefulSet) (bool, error) {
-	const NotForcedRequeue = false
-	const ForcedRequeue = true
 
 	logger := log.WithValues("Deployment.Namespace", desiredResource.Namespace, "Deployment.Name", desiredResource.Name)
 

@@ -109,6 +109,14 @@ func (r *ReconcileCustomResource) Reconcile(request reconcile.Request) (reconcil
 		return handleRequeueForced(err, logger)
 	}
 
+	isRequeueForced, err = r.handleNetworkPolicy(handledCRInstance)
+	if err != nil {
+		return handleRequeueError(err,logger)
+	}
+	if isRequeueForced {
+		return handleRequeueForced(err, logger)
+	}
+
 	return handleRequeueStd(err, logger)
 }
 

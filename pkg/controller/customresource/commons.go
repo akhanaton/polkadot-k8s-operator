@@ -15,3 +15,12 @@ const (
 	Validator CRKind = "Validator"
 	SentryAndValidator CRKind = "SentryAndValidator"
 )
+
+const(
+	NotForcedRequeue = false
+	ForcedRequeue = true
+)
+
+func defaultHandler() (bool,error){
+	return NotForcedRequeue,nil
+}

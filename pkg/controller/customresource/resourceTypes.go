@@ -4,6 +4,7 @@ import (
 	cachev1alpha1 "github.com/ironoa/kubernetes-customresource-operator/pkg/apis/cache/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -315,9 +316,37 @@ func newValidatorServiceForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.
 	}
 }
 
-//func newNetworkPolicyForValidatorCR(CRInstance *cachev1alpha1.CustomResource) *v1.NetworkPolicy {
-
-//}
+func newValidatorNetworkPolicyForCR(CRInstance *cachev1alpha1.CustomResource) *v1.NetworkPolicy {
+	labels := getValidatorLabels()
+	sentryLalbels := getSentrylabels()
+	
+	return &v1.NetworkPolicy{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "polkadot-networkpolicy",
+			Namespace: CRInstance.Namespace,
+		},
+		Spec:  	v1.NetworkPolicySpec{
+					PodSelector: metav1.LabelSelector{
+						MatchLabels: labels,
+					},
+				Ingress: []v1.NetworkPolicyIngressRule{{
+					From: []v1.NetworkPolicyPeer{{
+						PodSelector:  &metav1.LabelSelector{
+							MatchLabels: sentryLalbels,
+						},
+					}},
+				}},
+				Egress: []v1.NetworkPolicyEgressRule{{
+					To: []v1.NetworkPolicyPeer{{
+						PodSelector:  &metav1.LabelSelector{
+							MatchLabels: sentryLalbels,
+						},
+					}},
+				}},
+		},
+	}
+}
 
 func getAppLabels() map[string]string{
 	labels:= map[string]string{"app":"polkadot"}

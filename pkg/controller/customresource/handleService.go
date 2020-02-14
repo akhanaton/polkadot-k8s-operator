@@ -10,8 +10,6 @@ import (
 )
 
 func (r *ReconcileCustomResource) handleService(CRInstance *cachev1alpha1.CustomResource) (bool, error) {
-	const NotForcedRequeue = false
-	const ForcedRequeue = true
 
 	if CRKind(CRInstance.Spec.Kind) == Validator {
 		return r.handleSpecificService(CRInstance, newValidatorServiceForCR(CRInstance))
@@ -27,12 +25,10 @@ func (r *ReconcileCustomResource) handleService(CRInstance *cachev1alpha1.Custom
 		return r.handleSpecificService(CRInstance, newValidatorServiceForCR(CRInstance))
 	}
 
-	return NotForcedRequeue, nil // TODO handle default
+	return defaultHandler()
 }
 
 func (r *ReconcileCustomResource) handleSpecificService(CRInstance *cachev1alpha1.CustomResource, desiredService *corev1.Service) (bool, error) {
-	const NotForcedRequeue = false
-	const ForcedRequeue = true
 
 	logger := log.WithValues("Service.Namespace", desiredService.Namespace, "Service.Name", desiredService.Name)
 

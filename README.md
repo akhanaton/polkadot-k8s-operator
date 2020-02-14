@@ -1,5 +1,6 @@
-# Kubernetes-polkadot-operator
-Kubernetes Operator for a Polkadot Custom Resource
+# PolkaKop - Kubernetes Operator for Polkadot 
+
+Kubernetes Operator for sentry nodes and validators
 
 ## Requirements
 

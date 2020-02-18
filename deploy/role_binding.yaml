@@ -1,11 +1,11 @@
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: customresource-operator
+  name: polkadot-operator
 subjects:
 - kind: ServiceAccount
-  name: customresource-operator
+  name: polkadot-operator
 roleRef:
   kind: Role
-  name: customresource-operator
+  name: polkadot-operator
   apiGroup: rbac.authorization.k8s.io

@@ -2,7 +2,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   creationTimestamp: null
-  name: customresource-operator
+  name: polkadot-operator
 rules:
 - apiGroups:
   - ""
@@ -48,7 +48,7 @@ rules:
 - apiGroups:
   - apps
   resourceNames:
-  - customresource-operator
+  - polkadot-operator
   resources:
   - deployments/finalizers
   verbs:
@@ -67,7 +67,7 @@ rules:
   verbs:
   - get
 - apiGroups:
-  - cache.example.com
+  - polkadot.swisscomblockchain.com
   resources:
   - '*'
   verbs:

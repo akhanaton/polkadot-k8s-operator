@@ -1,3 +1,3 @@
 pushd ..
-kubectl create -f deploy/crds/cache.example.com_v1alpha1_customresource_cr.yaml
+kubectl create -f deploy/crds/polkadot.swisscomblockchain.com_v1alpha1_polkadot_cr.yaml
 popd

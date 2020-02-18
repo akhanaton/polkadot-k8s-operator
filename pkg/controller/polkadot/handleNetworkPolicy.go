@@ -1,15 +1,15 @@
-package customresource
+package polkadot
 
 import (
 	"context"
 	"github.com/go-logr/logr"
-	cachev1alpha1 "github.com/ironoa/kubernetes-customresource-operator/pkg/apis/cache/v1alpha1"
+	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *ReconcileCustomResource) handleNetworkPolicy(CRInstance *cachev1alpha1.CustomResource) (bool, error) {
+func (r *ReconcilePolkadot) handleNetworkPolicy(CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
 
 	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
 		return r.handleSpecificNetworkPolicy(CRInstance, newValidatorNetworkPolicyForCR(CRInstance))
@@ -18,7 +18,7 @@ func (r *ReconcileCustomResource) handleNetworkPolicy(CRInstance *cachev1alpha1.
 	return defaultHandler()
 }
 
-func (r *ReconcileCustomResource) handleSpecificNetworkPolicy(CRInstance *cachev1alpha1.CustomResource, desiredNetworkPolicy *v1.NetworkPolicy) (bool, error) {
+func (r *ReconcilePolkadot) handleSpecificNetworkPolicy(CRInstance *polkadotv1alpha1.Polkadot, desiredNetworkPolicy *v1.NetworkPolicy) (bool, error) {
 
 	logger := log.WithValues("Service.Namespace", desiredNetworkPolicy.Namespace, "Service.Name", desiredNetworkPolicy.Name)
 
@@ -42,7 +42,7 @@ func (r *ReconcileCustomResource) handleSpecificNetworkPolicy(CRInstance *cachev
 	return NotForcedRequeue, nil
 }
 
-func (r *ReconcileCustomResource) fetchNP(np *v1.NetworkPolicy) (*v1.NetworkPolicy, error) {
+func (r *ReconcilePolkadot) fetchNP(np *v1.NetworkPolicy) (*v1.NetworkPolicy, error) {
 	found := &v1.NetworkPolicy{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: np.Name, Namespace: np.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
@@ -51,7 +51,7 @@ func (r *ReconcileCustomResource) fetchNP(np *v1.NetworkPolicy) (*v1.NetworkPoli
 	return found, err
 }
 
-func (r *ReconcileCustomResource) createNP(networkPolicy *v1.NetworkPolicy, CRInstance *cachev1alpha1.CustomResource, logger logr.Logger) error {
+func (r *ReconcilePolkadot) createNP(networkPolicy *v1.NetworkPolicy, CRInstance *polkadotv1alpha1.Polkadot, logger logr.Logger) error {
 	err := r.setOwnership(CRInstance, networkPolicy)
 	if err != nil {
 		logger.Error(err, "Error on setting the ownership...")

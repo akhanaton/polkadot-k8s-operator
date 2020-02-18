@@ -1,7 +1,7 @@
-package customresource
+package polkadot
 
 import (
-	cachev1alpha1 "github.com/ironoa/kubernetes-customresource-operator/pkg/apis/cache/v1alpha1"
+	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/networking/v1"
@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func newSentryStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1.StatefulSet {
+func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.StatefulSet {
 	replicas := CRInstance.Spec.Sentry.Replicas
 	version := CRInstance.Spec.ClientVersion
 	clientName := CRInstance.Spec.Sentry.ClientName
@@ -125,7 +125,7 @@ func newSentryStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1
 	}
 }
 
-func newValidatorStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *appsv1.StatefulSet {
+func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.StatefulSet {
 	replicas := int32(1)
 	version := CRInstance.Spec.ClientVersion
 	clientName := CRInstance.Spec.Validator.ClientName
@@ -242,7 +242,7 @@ func newValidatorStatefulSetForCR(CRInstance *cachev1alpha1.CustomResource) *app
 	}
 }
 
-func newSentryServiceForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.Service {
+func newSentryServiceForCR(CRInstance *polkadotv1alpha1.Polkadot) *corev1.Service {
 	labels := getSentrylabels()
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -277,7 +277,7 @@ func newSentryServiceForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.Ser
 	}
 }
 
-func newValidatorServiceForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.Service {
+func newValidatorServiceForCR(CRInstance *polkadotv1alpha1.Polkadot) *corev1.Service {
 	labels := getValidatorLabels()
 	serviceType := corev1.ServiceTypeClusterIP
 	if CRKind(CRInstance.Spec.Kind) == Validator {
@@ -316,7 +316,7 @@ func newValidatorServiceForCR(CRInstance *cachev1alpha1.CustomResource) *corev1.
 	}
 }
 
-func newValidatorNetworkPolicyForCR(CRInstance *cachev1alpha1.CustomResource) *v1.NetworkPolicy {
+func newValidatorNetworkPolicyForCR(CRInstance *polkadotv1alpha1.Polkadot) *v1.NetworkPolicy {
 	labels := getValidatorLabels()
 	sentryLalbels := getSentrylabels()
 	

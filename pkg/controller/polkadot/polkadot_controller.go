@@ -1,8 +1,8 @@
-package customresource
+package polkadot
 
 import (
 	"github.com/go-logr/logr"
-	cachev1alpha1 "github.com/ironoa/kubernetes-customresource-operator/pkg/apis/cache/v1alpha1"
+	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,14 +15,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_customresource")
+var log = logf.Log.WithName("controller_polkadot")
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
 * business logic.  Delete these comments after modifying this file.*
  */
 
-// Add creates a new CustomResource Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new Polkadot Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
@@ -30,19 +30,19 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileCustomResource{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcilePolkadot{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("customresource-controller", mgr, controller.Options{Reconciler: r, MaxConcurrentReconciles: 1})
+	c, err := controller.New("polkadot-controller", mgr, controller.Options{Reconciler: r, MaxConcurrentReconciles: 1})
 	if err != nil {
 		return err
 	}
 
 	// Watch for changes to primary resource CustomResource
-	err = c.Watch(&source.Kind{Type: &cachev1alpha1.CustomResource{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &polkadotv1alpha1.Polkadot{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Watch for changes to secondary resource StatefulSet and requeue the owner CustomResource
 	err = c.Watch(&source.Kind{Type: &appsv1.StatefulSet{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &cachev1alpha1.CustomResource{},
+		OwnerType:    &polkadotv1alpha1.Polkadot{},
 	})
 	if err != nil {
 		return err
@@ -59,20 +59,22 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Watch for changes to secondary resource Service and requeue the owner CustomResource
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &cachev1alpha1.CustomResource{},
+		OwnerType:    &polkadotv1alpha1.Polkadot{},
 	})
 	if err != nil {
 		return err
 	}
 
+	//TODO add watch for NetworkPolicy
+
 	return nil
 }
 
-// blank assignment to verify that ReconcileCustomResource implements reconcile.Reconciler
-var _ reconcile.Reconciler = &ReconcileCustomResource{}
+// blank assignment to verify that ReconcilePolkadot implements reconcile.Reconciler
+var _ reconcile.Reconciler = &ReconcilePolkadot{}
 
-// ReconcileCustomResource reconciles a CustomResource object
-type ReconcileCustomResource struct {
+// ReconcilePolkadot reconciles a Polkadot object
+type ReconcilePolkadot struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
@@ -81,7 +83,7 @@ type ReconcileCustomResource struct {
 
 // Reconcile reads that state of the cluster for a CustomResource object and makes changes based on the state read
 // and what is in the CustomResource.Spec
-func (r *ReconcileCustomResource) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcilePolkadot) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	logger.Info("Reconciling CustomResource")
 
@@ -136,9 +138,3 @@ func handleRequeueStd (err error, logger logr.Logger) (reconcile.Result, error){
 	logger.Info("Return and not requeing the request")
 	return reconcile.Result{Requeue: true}, nil
 }
-
-
-
-
-
-

@@ -1,4 +1,3 @@
 pushd ..
-kubectl delete -f deploy/crds/cache.example.com_v1alpha1_customresource_cr.yaml
-kubectl delete -f deploy/crds/cache.example.com_customresources_crd.yaml
+kubectl delete -f deploy/crds/polkadot.swisscomblockchain.com_v1alpha1_polkadot_cr.yaml
 popd

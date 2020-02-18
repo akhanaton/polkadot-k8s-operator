@@ -1,15 +1,15 @@
-package customresource
+package polkadot
 
 import (
 	"context"
 	"github.com/go-logr/logr"
-	cachev1alpha1 "github.com/ironoa/kubernetes-customresource-operator/pkg/apis/cache/v1alpha1"
+	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *ReconcileCustomResource) handleStatefulSet(CRInstance *cachev1alpha1.CustomResource) (bool, error){
+func (r *ReconcilePolkadot) handleStatefulSet(CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
 
 	if CRKind(CRInstance.Spec.Kind) == Validator {
 		return r.handleStatefulSetSpecific(CRInstance, newValidatorStatefulSetForCR(CRInstance))
@@ -28,7 +28,7 @@ func (r *ReconcileCustomResource) handleStatefulSet(CRInstance *cachev1alpha1.Cu
 	return defaultHandler()
 }
 
-func (r *ReconcileCustomResource) handleStatefulSetSpecific(CRInstance *cachev1alpha1.CustomResource, desiredResource *appsv1.StatefulSet) (bool, error) {
+func (r *ReconcilePolkadot) handleStatefulSetSpecific(CRInstance *polkadotv1alpha1.Polkadot, desiredResource *appsv1.StatefulSet) (bool, error) {
 
 	logger := log.WithValues("Deployment.Namespace", desiredResource.Namespace, "Deployment.Name", desiredResource.Name)
 
@@ -62,7 +62,7 @@ func (r *ReconcileCustomResource) handleStatefulSetSpecific(CRInstance *cachev1a
 	return NotForcedRequeue, nil
 }
 
-func (r *ReconcileCustomResource) fetchStatefulSet(obj *appsv1.StatefulSet) (*appsv1.StatefulSet, error) {
+func (r *ReconcilePolkadot) fetchStatefulSet(obj *appsv1.StatefulSet) (*appsv1.StatefulSet, error) {
 	found := &appsv1.StatefulSet{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: obj.Name, Namespace: obj.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
@@ -71,7 +71,7 @@ func (r *ReconcileCustomResource) fetchStatefulSet(obj *appsv1.StatefulSet) (*ap
 	return found, err
 }
 
-func (r *ReconcileCustomResource) createStatefulSet(statefulSet *appsv1.StatefulSet, CRInstance *cachev1alpha1.CustomResource, logger logr.Logger) error {
+func (r *ReconcilePolkadot) createStatefulSet(statefulSet *appsv1.StatefulSet, CRInstance *polkadotv1alpha1.Polkadot, logger logr.Logger) error {
 	err := r.setOwnership(CRInstance, statefulSet)
 	if err != nil {
 		logger.Error(err, "Error on setting the ownership...")
@@ -81,7 +81,7 @@ func (r *ReconcileCustomResource) createStatefulSet(statefulSet *appsv1.Stateful
 	return err
 }
 
-func (r *ReconcileCustomResource) updateStatefulSet(obj *appsv1.StatefulSet) error {
+func (r *ReconcilePolkadot) updateStatefulSet(obj *appsv1.StatefulSet) error {
 	return r.client.Update(context.TODO(), obj)
 }
 

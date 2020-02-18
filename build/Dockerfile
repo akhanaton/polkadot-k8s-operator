@@ -1,11 +1,11 @@
 FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
 
-ENV OPERATOR=/usr/local/bin/customresource-operator \
+ENV OPERATOR=/usr/local/bin/polkadot-operator \
     USER_UID=1001 \
-    USER_NAME=customresource-operator
+    USER_NAME=polkadot-operator
 
 # install operator binary
-COPY build/_output/bin/customresource-operator ${OPERATOR}
+COPY build/_output/bin/polkadot-operator ${OPERATOR}
 
 COPY build/bin /usr/local/bin
 RUN  /usr/local/bin/user_setup

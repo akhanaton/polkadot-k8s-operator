@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: customresource-operator
+  name: polkadot-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: customresource-operator
+      name: polkadot-operator
   template:
     metadata:
       labels:
-        name: customresource-operator
+        name: polkadot-operator
     spec:
-      serviceAccountName: customresource-operator
+      serviceAccountName: polkadot-operator
       containers:
-        - name: customresource-operator
-          image: ironoa/customresource-operator:v0.0.7 #define your favourite
+        - name: polkadot-operator
+          image: ironoa/customresource-operator:v0.0.8 #define your favourite
           command:
-          - customresource-operator
+          - polkadot-operator
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE
@@ -29,4 +29,4 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "customresource-operator"
+              value: "polkadot-operator"

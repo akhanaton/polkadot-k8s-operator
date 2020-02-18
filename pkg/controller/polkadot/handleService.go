@@ -1,15 +1,15 @@
-package customresource
+package polkadot
 
 import (
 	"context"
 	"github.com/go-logr/logr"
-	cachev1alpha1 "github.com/ironoa/kubernetes-customresource-operator/pkg/apis/cache/v1alpha1"
+	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *ReconcileCustomResource) handleService(CRInstance *cachev1alpha1.CustomResource) (bool, error) {
+func (r *ReconcilePolkadot) handleService(CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
 
 	if CRKind(CRInstance.Spec.Kind) == Validator {
 		return r.handleSpecificService(CRInstance, newValidatorServiceForCR(CRInstance))
@@ -28,7 +28,7 @@ func (r *ReconcileCustomResource) handleService(CRInstance *cachev1alpha1.Custom
 	return defaultHandler()
 }
 
-func (r *ReconcileCustomResource) handleSpecificService(CRInstance *cachev1alpha1.CustomResource, desiredService *corev1.Service) (bool, error) {
+func (r *ReconcilePolkadot) handleSpecificService(CRInstance *polkadotv1alpha1.Polkadot, desiredService *corev1.Service) (bool, error) {
 
 	logger := log.WithValues("Service.Namespace", desiredService.Namespace, "Service.Name", desiredService.Name)
 
@@ -62,7 +62,7 @@ func (r *ReconcileCustomResource) handleSpecificService(CRInstance *cachev1alpha
 	return NotForcedRequeue, nil
 }
 
-func (r *ReconcileCustomResource) fetchService(service *corev1.Service) (*corev1.Service, error) {
+func (r *ReconcilePolkadot) fetchService(service *corev1.Service) (*corev1.Service, error) {
 	found := &corev1.Service{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: service.Name, Namespace: service.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
@@ -71,7 +71,7 @@ func (r *ReconcileCustomResource) fetchService(service *corev1.Service) (*corev1
 	return found, err
 }
 
-func (r *ReconcileCustomResource) createService(service *corev1.Service, CRInstance *cachev1alpha1.CustomResource, logger logr.Logger) error {
+func (r *ReconcilePolkadot) createService(service *corev1.Service, CRInstance *polkadotv1alpha1.Polkadot, logger logr.Logger) error {
 	err := r.setOwnership(CRInstance, service)
 	if err != nil {
 		logger.Error(err, "Error on setting the ownership...")
@@ -85,6 +85,6 @@ func areServicesDifferent(currentService *corev1.Service, desiredService *corev1
 	return result
 }
 
-func (r *ReconcileCustomResource) updateService(service *corev1.Service, logger logr.Logger) error {
+func (r *ReconcilePolkadot) updateService(service *corev1.Service, logger logr.Logger) error {
 	return r.client.Update(context.TODO(), service)
 }

@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/ironoa/kubernetes-customresource-operator/pkg/apis/cache/v1alpha1"
+	"github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 )
 
 func init() {

@@ -12,9 +12,9 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 
-	"github.com/ironoa/kubernetes-customresource-operator/pkg/apis"
-	"github.com/ironoa/kubernetes-customresource-operator/pkg/controller"
-	"github.com/ironoa/kubernetes-customresource-operator/version"
+	"github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis"
+	"github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/controller"
+	"github.com/swisscom-blockchain/polkadot-k8s-operator/version"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
@@ -84,7 +84,7 @@ func main() {
 
 	ctx := context.TODO()
 	// Become the leader before proceeding
-	err = leader.Become(ctx, "customresource-operator-lock")
+	err = leader.Become(ctx, "polkadot-operator-lock")
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)

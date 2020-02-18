@@ -144,9 +144,9 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 		"--validator",
 		"--node-key", nodeKey,
 		"--name", clientName,
-		//"--unsafe-rpc-external", //TODO check the unsafeness
-		//"--unsafe-ws-external",
-		//"--rpc-cors=all",
+		"--unsafe-rpc-external", //TODO check the unsafeness
+		"--unsafe-ws-external",
+		"--rpc-cors=all",
 		"--no-telemetry",
 	}
 	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
@@ -219,16 +219,16 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 						//	InitialDelaySeconds: 10,
 						//	PeriodSeconds:       10,
 						//},
-						//LivenessProbe: &corev1.Probe{
-						//	Handler:             corev1.Handler{
-						//		HTTPGet: &corev1.HTTPGetAction{
-						//			Path: "/health",
-						//			Port: intstr.IntOrString{Type: intstr.Int, IntVal: 9933},
-						//		},
-						//	},
-						//	InitialDelaySeconds: 10,
-						//	PeriodSeconds:       10,
-						//},
+						LivenessProbe: &corev1.Probe{
+							Handler:             corev1.Handler{
+								HTTPGet: &corev1.HTTPGetAction{
+									Path: "/health",
+									Port: intstr.IntOrString{Type: intstr.Int, IntVal: 9933},
+								},
+							},
+							InitialDelaySeconds: 10,
+							PeriodSeconds:       10,
+						},
 						Resources: corev1.ResourceRequirements{
 							Limits: corev1.ResourceList{
 								"cpu": resource.MustParse(CPULimit),

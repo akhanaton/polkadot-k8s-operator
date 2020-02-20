@@ -8,6 +8,24 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"strconv"
+)
+
+const (
+	imageName              = "parity/polkadot"
+	serviceSentryName      = "sentry-service"
+	serviceValidatorName   = "validator-service"
+	P2PPort                = 30333
+	P2PPortName            = "p2p"
+	RPCPort                = 9933
+	RPCPortName            = "http-rpc"
+	WSPort                 = 9944
+	WSPortName             = "websocket-rpc"
+	validatorSSName        = "validator-sset"
+	sentrySSName           = "sentry-sset"
+	validatorNetworkPolicy = "validator-networkpolicy"
+	volumeMountPath        = "/polkadot"
+	storageRequest         = "10Gi"
 )
 
 func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.StatefulSet {
@@ -22,26 +40,32 @@ func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.St
 	serviceName := "polkadot"
 
 	labels := getSentrylabels()
-	labelsWithVersion := getCopyLabelsWithVersion(labels,version)
+	labelsWithVersion := getCopyLabelsWithVersion(labels, version)
 
 	commands := []string{
 		"polkadot",
 		"--sentry",
 		"--node-key", nodeKey,
 		"--name", clientName,
-		"--unsafe-rpc-external", //TODO check the unsafeness
+		"--port",
+		strconv.Itoa(P2PPort),
+		"--rpc-port",
+		strconv.Itoa(RPCPort),
+		"--ws-port",
+		strconv.Itoa(WSPort),
+		"--unsafe-rpc-external",
 		"--unsafe-ws-external",
 		"--rpc-cors=all",
 		"--no-telemetry",
 	}
 	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
 		reservedValidatorID := CRInstance.Spec.Sentry.ReservedValidatorID
-		commands = append(commands,"--reserved-nodes", "/dns4/polkadot-service-validator/tcp/30333/p2p/" + reservedValidatorID)
+		commands = append(commands, "--reserved-nodes", "/dns4/"+serviceValidatorName+"/tcp/30333/p2p/"+reservedValidatorID)
 	}
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:       "polkadot-statefulset-" + "sentry",
+			Name:      sentrySSName,
 			Namespace: CRInstance.Namespace,
 			Labels:    labelsWithVersion,
 		},
@@ -56,10 +80,10 @@ func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.St
 					Name: volumeName,
 				},
 				Spec: corev1.PersistentVolumeClaimSpec{
-					AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-					Resources:        corev1.ResourceRequirements{
-						Requests: map[corev1.ResourceName]resource.Quantity{
-							corev1.ResourceStorage: *resource.NewQuantity(5*1000*1000*1000, resource.DecimalSI), //5GB
+					AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							"storage": resource.MustParse(storageRequest),
 						},
 					},
 					StorageClassName: &storageClassName,
@@ -72,41 +96,31 @@ func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.St
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
 						Name:  serviceName,
-						Image: "parity/polkadot:" + version,
+						Image: imageName + ":" + version,
 						VolumeMounts: []corev1.VolumeMount{{
-							Name: volumeName,
-							MountPath: "/data",
+							Name:      volumeName,
+							MountPath: volumeMountPath,
 						}},
 						Command: commands,
 						Ports: []corev1.ContainerPort{
 							{
-								ContainerPort: 30333,
-								Name: "p2p",
+								ContainerPort: P2PPort,
+								Name:          P2PPortName,
 							},
 							{
-								ContainerPort: 9933,
-								Name: "http-rpc",
+								ContainerPort: RPCPort,
+								Name:          RPCPortName,
 							},
 							{
-								ContainerPort: 9944,
-								Name: "websocket-rpc",
+								ContainerPort: WSPort,
+								Name:          WSPortName,
 							},
 						},
-						//ReadinessProbe: &corev1.Probe{
-						//	Handler:             corev1.Handler{
-						//		HTTPGet: &corev1.HTTPGetAction{
-						//			Path: "/health",
-						//			Port: intstr.IntOrString{Type: intstr.String, StrVal:"http-rpc"},
-						//		},
-						//	},
-						//	InitialDelaySeconds: 10,
-						//	PeriodSeconds:       10,
-						//},
 						LivenessProbe: &corev1.Probe{
-							Handler:             corev1.Handler{
+							Handler: corev1.Handler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path: "/health",
-									Port: intstr.IntOrString{Type: intstr.String, StrVal:"http-rpc"},
+									Port: intstr.IntOrString{Type: intstr.String, StrVal: RPCPortName},
 								},
 							},
 							InitialDelaySeconds: 10,
@@ -114,7 +128,7 @@ func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.St
 						},
 						Resources: corev1.ResourceRequirements{
 							Limits: corev1.ResourceList{
-								"cpu": resource.MustParse(CPULimit),
+								"cpu":    resource.MustParse(CPULimit),
 								"memory": resource.MustParse(memoryLimit),
 							},
 						},
@@ -135,16 +149,24 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 	volumeName := "polkadot-volume"
 	storageClassName := "default"
 	serviceName := "polkadot"
+	user := int64(1000)
+	group := int64(1000)
 
 	labels := getValidatorLabels()
-	labelsWithVersion := getCopyLabelsWithVersion(labels,version)
+	labelsWithVersion := getCopyLabelsWithVersion(labels, version)
 
 	commands := []string{
 		"polkadot",
 		"--validator",
 		"--node-key", nodeKey,
 		"--name", clientName,
-		"--unsafe-rpc-external", //TODO check the unsafeness
+		"--port",
+		strconv.Itoa(P2PPort),
+		"--rpc-port",
+		strconv.Itoa(RPCPort),
+		"--ws-port",
+		strconv.Itoa(WSPort),
+		"--unsafe-rpc-external",
 		"--unsafe-ws-external",
 		"--rpc-cors=all",
 		"--no-telemetry",
@@ -153,12 +175,12 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 		reservedSentryID := CRInstance.Spec.Validator.ReservedSentryID
 		commands = append(commands,
 			"--reserved-only",
-			"--reserved-nodes", "/dns4/polkadot-service-sentry/tcp/30333/p2p/" + reservedSentryID)
+			"--reserved-nodes", "/dns4/"+serviceSentryName+"/tcp/30333/p2p/"+reservedSentryID)
 	}
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "polkadot-statefulset-" + "validator",
+			Name:      validatorSSName,
 			Namespace: CRInstance.Namespace,
 			Labels:    labelsWithVersion,
 		},
@@ -173,10 +195,10 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 					Name: volumeName,
 				},
 				Spec: corev1.PersistentVolumeClaimSpec{
-					AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-					Resources:        corev1.ResourceRequirements{
-						Requests: map[corev1.ResourceName]resource.Quantity{
-							corev1.ResourceStorage: *resource.NewQuantity(5*1000*1000*1000, resource.DecimalSI), //5GB
+					AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							"storage": resource.MustParse(storageRequest),
 						},
 					},
 					StorageClassName: &storageClassName,
@@ -187,43 +209,41 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
+					SecurityContext: &corev1.PodSecurityContext{
+						RunAsUser:          &user,
+						RunAsGroup:         &group,
+					},
 					Containers: []corev1.Container{{
+						SecurityContext: corev1.SecurityContext{
+							RunAsUser:          &user,
+							RunAsGroup:         &group,
+						},
 						Name:  serviceName,
-						Image: "parity/polkadot:" + version,
+						Image: imageName + ":" + version,
 						VolumeMounts: []corev1.VolumeMount{{
-							Name: volumeName,
-							MountPath: "/data",
+							Name:      volumeName,
+							MountPath: volumeMountPath,
 						}},
 						Command: commands,
 						Ports: []corev1.ContainerPort{
 							{
-								ContainerPort: 30333,
-								Name: "p2p",
+								ContainerPort: P2PPort,
+								Name:          P2PPortName,
 							},
 							{
-								ContainerPort: 9933,
-								Name: "http-rpc",
+								ContainerPort: RPCPort,
+								Name:          RPCPortName,
 							},
 							{
-								ContainerPort: 9944,
-								Name: "websocket-rpc",
+								ContainerPort: WSPort,
+								Name:          WSPortName,
 							},
 						},
-						//ReadinessProbe: &corev1.Probe{
-						//	Handler:             corev1.Handler{
-						//		HTTPGet: &corev1.HTTPGetAction{
-						//			Path: "/health",
-						//			Port: intstr.IntOrString{Type: intstr.String, StrVal:"http-rpc"},
-						//		},
-						//	},
-						//	InitialDelaySeconds: 10,
-						//	PeriodSeconds:       10,
-						//},
 						LivenessProbe: &corev1.Probe{
-							Handler:             corev1.Handler{
+							Handler: corev1.Handler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path: "/health",
-									Port: intstr.IntOrString{Type: intstr.Int, IntVal: 9933},
+									Port: intstr.IntOrString{Type: intstr.String, StrVal: RPCPortName},
 								},
 							},
 							InitialDelaySeconds: 10,
@@ -231,7 +251,7 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 						},
 						Resources: corev1.ResourceRequirements{
 							Limits: corev1.ResourceList{
-								"cpu": resource.MustParse(CPULimit),
+								"cpu":    resource.MustParse(CPULimit),
 								"memory": resource.MustParse(memoryLimit),
 							},
 						},
@@ -246,7 +266,7 @@ func newSentryServiceForCR(CRInstance *polkadotv1alpha1.Polkadot) *corev1.Servic
 	labels := getSentrylabels()
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "polkadot-service-sentry",
+			Name:      serviceSentryName,
 			Namespace: CRInstance.Namespace,
 			Labels:    labels,
 		},
@@ -254,21 +274,21 @@ func newSentryServiceForCR(CRInstance *polkadotv1alpha1.Polkadot) *corev1.Servic
 			Type: corev1.ServiceTypeNodePort,
 			Ports: []corev1.ServicePort{
 				{
-					Name:       "p2p",
-					Port:       30333,
-					TargetPort: intstr.FromInt(30333),
+					Name:       P2PPortName,
+					Port:       P2PPort,
+					TargetPort: intstr.FromInt(P2PPort),
 					Protocol:   "TCP",
 				},
 				{
-					Name:       "http-rpc",
-					Port:       9933,
-					TargetPort: intstr.FromInt(9933),
+					Name:       RPCPortName,
+					Port:       RPCPort,
+					TargetPort: intstr.FromInt(RPCPort),
 					Protocol:   "TCP",
 				},
 				{
-					Name:       "websocket-rpc",
-					Port:       9944,
-					TargetPort: intstr.FromInt(9944),
+					Name:       WSPortName,
+					Port:       WSPort,
+					TargetPort: intstr.FromInt(WSPort),
 					Protocol:   "TCP",
 				},
 			},
@@ -285,7 +305,7 @@ func newValidatorServiceForCR(CRInstance *polkadotv1alpha1.Polkadot) *corev1.Ser
 	}
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "polkadot-service-validator",
+			Name:      serviceValidatorName,
 			Namespace: CRInstance.Namespace,
 			Labels:    labels,
 		},
@@ -293,21 +313,21 @@ func newValidatorServiceForCR(CRInstance *polkadotv1alpha1.Polkadot) *corev1.Ser
 			Type: serviceType,
 			Ports: []corev1.ServicePort{
 				{
-					Name:       "p2p",
-					Port:       30333,
-					TargetPort: intstr.FromInt(30333),
+					Name:       P2PPortName,
+					Port:       P2PPort,
+					TargetPort: intstr.FromInt(P2PPort),
 					Protocol:   "TCP",
 				},
 				{
-					Name:       "http-rpc",
-					Port:       9933,
-					TargetPort: intstr.FromInt(9933),
+					Name:       RPCPortName,
+					Port:       RPCPort,
+					TargetPort: intstr.FromInt(RPCPort),
 					Protocol:   "TCP",
 				},
 				{
-					Name:       "websocket-rpc",
-					Port:       9944,
-					TargetPort: intstr.FromInt(9944),
+					Name:       WSPortName,
+					Port:       WSPort,
+					TargetPort: intstr.FromInt(WSPort),
 					Protocol:   "TCP",
 				},
 			},
@@ -318,38 +338,38 @@ func newValidatorServiceForCR(CRInstance *polkadotv1alpha1.Polkadot) *corev1.Ser
 
 func newValidatorNetworkPolicyForCR(CRInstance *polkadotv1alpha1.Polkadot) *v1.NetworkPolicy {
 	labels := getValidatorLabels()
-	sentryLalbels := getSentrylabels()
-	
+	sentryLabels := getSentrylabels()
+
 	return &v1.NetworkPolicy{
-		TypeMeta:   metav1.TypeMeta{},
+		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "polkadot-networkpolicy",
+			Name:      validatorNetworkPolicy,
 			Namespace: CRInstance.Namespace,
 		},
-		Spec:  	v1.NetworkPolicySpec{
-					PodSelector: metav1.LabelSelector{
-						MatchLabels: labels,
+		Spec: v1.NetworkPolicySpec{
+			PodSelector: metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Ingress: []v1.NetworkPolicyIngressRule{{
+				From: []v1.NetworkPolicyPeer{{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: sentryLabels,
 					},
-				Ingress: []v1.NetworkPolicyIngressRule{{
-					From: []v1.NetworkPolicyPeer{{
-						PodSelector:  &metav1.LabelSelector{
-							MatchLabels: sentryLalbels,
-						},
-					}},
 				}},
-				Egress: []v1.NetworkPolicyEgressRule{{
-					To: []v1.NetworkPolicyPeer{{
-						PodSelector:  &metav1.LabelSelector{
-							MatchLabels: sentryLalbels,
-						},
-					}},
+			}},
+			Egress: []v1.NetworkPolicyEgressRule{{
+				To: []v1.NetworkPolicyPeer{{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: sentryLabels,
+					},
 				}},
+			}},
 		},
 	}
 }
 
-func getAppLabels() map[string]string{
-	labels:= map[string]string{"app":"polkadot"}
+func getAppLabels() map[string]string {
+	labels := map[string]string{"app": "polkadot"}
 	return labels
 }
 

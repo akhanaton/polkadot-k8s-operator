@@ -10,11 +10,11 @@ spec:
     clientName: "IronoaSentry"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000013" # Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
     reservedValidatorID: "QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM"
-    CPULimit: "0.5"
-    memoryLimit: "500Mi"
+    CPULimit: "1"
+    memoryLimit: "1Gi"
   validator:
     clientName: "IronoaValidator"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
     reservedSentryID: "QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm"
-    CPULimit: "0.5"
-    memoryLimit: "500Mi"
+    CPULimit: "1"
+    memoryLimit: "1Gi"

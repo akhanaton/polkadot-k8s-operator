@@ -1,3 +1,5 @@
+// Copyright (c) 2020 Swisscom Blockchain AG
+// Licensed under MIT License
 // NOTE: Boilerplate only.  Ignore this file.
 
 // Package v1alpha1 contains API Schema definitions for the polkadot v1alpha1 API group

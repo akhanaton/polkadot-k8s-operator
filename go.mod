@@ -1,3 +1,5 @@
+// Copyright (c) 2020 Swisscom Blockchain AG
+// Licensed under MIT License
 module github.com/swisscom-blockchain/polkadot-k8s-operator
 
 go 1.13

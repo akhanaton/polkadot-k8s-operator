@@ -1,3 +1,6 @@
+[comment]: <>  Copyright (c) 2020 Swisscom Blockchain AG
+[comment]: <>  Licensed under MIT License
+
 # PolkaKop - Kubernetes Operator for Polkadot 
 
 Kubernetes Operator for sentry nodes and validators

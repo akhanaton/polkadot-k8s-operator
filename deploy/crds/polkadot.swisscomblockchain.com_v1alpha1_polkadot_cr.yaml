@@ -1,3 +1,5 @@
+# Copyright (c) 2020 Swisscom Blockchain AG
+# Licensed under MIT License
 apiVersion: polkadot.swisscomblockchain.com/v1alpha1
 kind: Polkadot
 metadata:

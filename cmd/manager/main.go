@@ -1,3 +1,5 @@
+// Copyright (c) 2020 Swisscom Blockchain AG
+// Licensed under MIT License
 package main
 
 import (

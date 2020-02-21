@@ -1,3 +1,5 @@
+# Copyright (c) 2020 Swisscom Blockchain AG
+# Licensed under MIT License
 apiVersion: cache.example.com/v1alpha1
 kind: CustomResource
 metadata:

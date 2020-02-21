@@ -1,3 +1,5 @@
+// Copyright (c) 2020 Swisscom Blockchain AG
+// Licensed under MIT License
 // Package polkadot contains polkadot API versions.
 //
 // This file ensures Go source parsers acknowledge the polkadot package

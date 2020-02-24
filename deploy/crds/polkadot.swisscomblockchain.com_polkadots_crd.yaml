@@ -52,10 +52,13 @@ spec:
                   type: integer
                 reservedValidatorID:
                   type: string
+                storageClassName:
+                  type: string
               required:
               - clientName
               - nodeKey
               - replicas
+              - storageClassName
               type: object
             validator:
               properties:
@@ -69,9 +72,12 @@ spec:
                   type: string
                 reservedSentryID:
                   type: string
+                storageClassName:
+                  type: string
               required:
               - clientName
               - nodeKey
+              - storageClassName
               type: object
           required:
           - clientVersion

@@ -13,3 +13,4 @@ spec:
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000013" # Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
     CPULimit: "0.5"
     memoryLimit: "500Mi"
+    storageClassName: "default" #["default","managed-premium"]

@@ -38,7 +38,7 @@ func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.St
 	CPULimit := CRInstance.Spec.Sentry.CPULimit
 	memoryLimit := CRInstance.Spec.Sentry.MemoryLimit
 	volumeName := "polkadot-volume"
-	storageClassName := "default"
+	storageClassName := CRInstance.Spec.Sentry.StorageClassName
 	serviceName := "polkadot"
 
 	labels := getSentrylabels()
@@ -149,7 +149,7 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 	CPULimit := CRInstance.Spec.Validator.CPULimit
 	memoryLimit := CRInstance.Spec.Validator.MemoryLimit
 	volumeName := "polkadot-volume"
-	storageClassName := "default"
+	storageClassName := CRInstance.Spec.Validator.StorageClassName
 	serviceName := "polkadot"
 	//user := int64(1000)
 	//group := int64(1000)

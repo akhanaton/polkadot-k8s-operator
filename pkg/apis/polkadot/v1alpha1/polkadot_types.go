@@ -26,6 +26,7 @@ type Validator struct {
 	ReservedSentryID string `json:"reservedSentryID,omitempty"`
 	CPULimit string `json:"CPULimit,omitempty"`
 	MemoryLimit string `json:"memoryLimit,omitempty"`
+	StorageClassName string `json:"storageClassName"`
 }
 
 type Sentry struct {
@@ -35,6 +36,7 @@ type Sentry struct {
 	ReservedValidatorID string `json:"reservedValidatorID,omitempty"`
 	CPULimit string `json:"CPULimit,omitempty"`
 	MemoryLimit string `json:"memoryLimit,omitempty"`
+	StorageClassName string `json:"storageClassName"`
 }
 
 // PolkadotStatus defines the observed state of Polkadot

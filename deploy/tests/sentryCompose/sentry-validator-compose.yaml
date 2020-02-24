@@ -10,9 +10,9 @@ services:
     #    volumes:
     #      - ../../target/release/substrate:/usr/local/bin/substrate
     image: parity/polkadot:v0.7.20
-    user: 1000:1000
-    #volumes:
-    #  - "./testD/dataValidator:/polkadot"
+    #user: 1000:1000
+    volumes:
+      - "./testD/dataValidator:/polkadot"
     networks:
       - network-a
     environment:
@@ -25,7 +25,7 @@ services:
     command:
       # Local node id: QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR
       - "--validator"
-      - "-d /tmp/polkadot"
+      #- "-d /polkadot"
       - "--reserved-only"
       - "--reserved-nodes"
       - "${VALIDATOR_RESERVED_NODES:-/dns4/sentry/tcp/30334/p2p/QmV7EhW6J6KgmNdr558RH1mPx2xGGznW7At4BhXzntRFsi}"

@@ -24,7 +24,7 @@ const (
 	validatorSSName        = "validator-sset"
 	sentrySSName           = "sentry-sset"
 	validatorNetworkPolicy = "validator-networkpolicy"
-	volumeMountPath        = "/polkadot"
+	volumeMountPath        = "/data"
 	storageRequest         = "10Gi"
 )
 
@@ -33,8 +33,8 @@ func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.St
 	version := CRInstance.Spec.ClientVersion
 	clientName := CRInstance.Spec.Sentry.ClientName
 	nodeKey := CRInstance.Spec.Sentry.NodeKey
-	CPULimit := CRInstance.Spec.Validator.CPULimit
-	memoryLimit := CRInstance.Spec.Validator.MemoryLimit
+	CPULimit := CRInstance.Spec.Sentry.CPULimit
+	memoryLimit := CRInstance.Spec.Sentry.MemoryLimit
 	volumeName := "polkadot-volume"
 	storageClassName := "default"
 	serviceName := "polkadot"
@@ -149,8 +149,8 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 	volumeName := "polkadot-volume"
 	storageClassName := "default"
 	serviceName := "polkadot"
-	user := int64(1000)
-	group := int64(1000)
+	//user := int64(1000)
+	//group := int64(1000)
 
 	labels := getValidatorLabels()
 	labelsWithVersion := getCopyLabelsWithVersion(labels, version)
@@ -209,15 +209,15 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
-					SecurityContext: &corev1.PodSecurityContext{
-						RunAsUser:          &user,
-						RunAsGroup:         &group,
-					},
+					//SecurityContext: &corev1.PodSecurityContext{
+					//	RunAsUser:          &user,
+					//	RunAsGroup:         &group,
+					//},
 					Containers: []corev1.Container{{
-						SecurityContext: corev1.SecurityContext{
-							RunAsUser:          &user,
-							RunAsGroup:         &group,
-						},
+						//SecurityContext: corev1.SecurityContext{
+						//	RunAsUser:          &user,
+						//	RunAsGroup:         &group,
+						//},
 						Name:  serviceName,
 						Image: imageName + ":" + version,
 						VolumeMounts: []corev1.VolumeMount{{

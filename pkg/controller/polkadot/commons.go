@@ -21,6 +21,6 @@ const(
 	ForcedRequeue = true
 )
 
-func defaultHandler() (bool,error){
+func handleSkip() (bool,error){
 	return NotForcedRequeue,nil
 }

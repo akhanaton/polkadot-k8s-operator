@@ -15,7 +15,7 @@ func (r *ReconcilePolkadot) handleNetworkPolicy(CRInstance *polkadotv1alpha1.Pol
 		return r.handleSpecificNetworkPolicy(CRInstance, newValidatorNetworkPolicyForCR(CRInstance))
 	}
 
-	return defaultHandler()
+	return handleSkip()
 }
 
 func (r *ReconcilePolkadot) handleSpecificNetworkPolicy(CRInstance *polkadotv1alpha1.Polkadot, desiredNetworkPolicy *v1.NetworkPolicy) (bool, error) {

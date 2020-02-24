@@ -39,7 +39,7 @@ func (h *handlerStatefulSetSentryAndValidator) handleStatefulSetSpecific(r *Reco
 type handlerStatefulSetDefault struct {
 }
 func (h *handlerStatefulSetDefault) handleStatefulSetSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
-	return defaultHandler()
+	return handleSkip()
 }
 
 //pattern factory

@@ -9,16 +9,37 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *ReconcilePolkadot) handleNetworkPolicy(CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
+//pattern Strategy
+type IHandlerNP interface {
+	handleNPSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error)
+}
 
-	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
-		return r.handleSpecificNetworkPolicy(CRInstance, newValidatorNetworkPolicyForCR(CRInstance))
-	}
+type handlerNPSentryAndValidator struct {
+}
+func (h *handlerNPSentryAndValidator) handleNPSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
+	return r.handleNPGeneric(CRInstance,newValidatorNetworkPolicyForCR(CRInstance))
+}
 
+type handlerNPDefault struct {
+}
+func (h *handlerNPDefault) handleNPSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
 	return handleSkip()
 }
 
-func (r *ReconcilePolkadot) handleSpecificNetworkPolicy(CRInstance *polkadotv1alpha1.Polkadot, desiredNetworkPolicy *v1.NetworkPolicy) (bool, error) {
+//pattern factory
+func getHandlerNP(CRInstance *polkadotv1alpha1.Polkadot) IHandlerNP {
+	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
+		return &handlerNPSentryAndValidator{}
+	}
+	return &handlerNPDefault{}
+}
+
+func (r *ReconcilePolkadot) handleNetworkPolicy(CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
+	handler := getHandlerNP(CRInstance)
+	return handler.handleNPSpecific(r,CRInstance)
+}
+
+func (r *ReconcilePolkadot) handleNPGeneric(CRInstance *polkadotv1alpha1.Polkadot, desiredNetworkPolicy *v1.NetworkPolicy) (bool, error) {
 
 	logger := log.WithValues("Service.Namespace", desiredNetworkPolicy.Namespace, "Service.Name", desiredNetworkPolicy.Name)
 

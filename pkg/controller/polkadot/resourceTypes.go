@@ -26,7 +26,7 @@ const (
 	validatorSSName        = "validator-sset"
 	sentrySSName           = "sentry-sset"
 	validatorNetworkPolicy = "validator-networkpolicy"
-	volumeMountPath        = "/data"
+	volumeMountPath        = "/polkadot"
 	storageRequest         = "10Gi"
 )
 

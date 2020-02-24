@@ -33,7 +33,7 @@ services:
       - "${VALIDATOR_NODE_KEY:-0000000000000000000000000000000000000000000000000000000000000001}"
       - "--port"
       - "${VALIDATOR_PORT:-30333}"
-      - "-lsync=trace"
+      #- "-lsync=trace"
       - "--unsafe-ws-external"
       - "--unsafe-rpc-external"
       - "--no-telemetry"

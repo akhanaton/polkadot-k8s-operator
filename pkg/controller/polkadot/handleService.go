@@ -11,26 +11,59 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *ReconcilePolkadot) handleService(CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
-
-	if CRKind(CRInstance.Spec.Kind) == Validator {
-		return r.handleSpecificService(CRInstance, newValidatorServiceForCR(CRInstance))
-	}
-	if CRKind(CRInstance.Spec.Kind) == Sentry {
-		return r.handleSpecificService(CRInstance, newSentryServiceForCR(CRInstance))
-	}
-	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
-		isForcedRequeue, err := r.handleSpecificService(CRInstance, newSentryServiceForCR(CRInstance))
-		if isForcedRequeue == ForcedRequeue || err != nil {
-			return isForcedRequeue, err
-		}
-		return r.handleSpecificService(CRInstance, newValidatorServiceForCR(CRInstance))
-	}
-
-	return defaultHandler()
+//pattern Strategy
+type IHandlerService interface {
+	handleServiceSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error)
 }
 
-func (r *ReconcilePolkadot) handleSpecificService(CRInstance *polkadotv1alpha1.Polkadot, desiredService *corev1.Service) (bool, error) {
+type handlerServiceValidator struct {
+}
+func (h *handlerServiceValidator) handleServiceSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
+	return r.handleServiceGeneric(CRInstance,newValidatorServiceForCR(CRInstance))
+}
+
+type handlerServiceSentry struct {
+}
+func (h *handlerServiceSentry) handleServiceSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
+	return r.handleServiceGeneric(CRInstance,newSentryServiceForCR(CRInstance))
+}
+
+type handlerServiceSentryAndValidator struct {
+}
+func (h *handlerServiceSentryAndValidator) handleServiceSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
+	isForcedRequeue, err := r.handleServiceGeneric(CRInstance, newSentryServiceForCR(CRInstance))
+	if isForcedRequeue == ForcedRequeue || err != nil {
+		return isForcedRequeue, err
+	}
+	return r.handleServiceGeneric(CRInstance, newValidatorServiceForCR(CRInstance))
+}
+
+type handlerServiceDefault struct {
+}
+func (h *handlerServiceDefault) handleServiceSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
+	return handleSkip()
+}
+
+//pattern factory
+func getHandlerService(CRInstance *polkadotv1alpha1.Polkadot) IHandlerService {
+	if CRKind(CRInstance.Spec.Kind) == Validator {
+		return &handlerServiceValidator{}
+	}
+	if CRKind(CRInstance.Spec.Kind) == Sentry {
+		return &handlerServiceSentry{}
+	}
+	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
+		return &handlerServiceSentryAndValidator{}
+	}
+	return &handlerServiceDefault{}
+}
+
+func (r *ReconcilePolkadot) handleService(CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
+	handler := getHandlerService(CRInstance)
+	return handler.handleServiceSpecific(r,CRInstance)
+}
+
+func (r *ReconcilePolkadot) handleServiceGeneric(CRInstance *polkadotv1alpha1.Polkadot, desiredService *corev1.Service) (bool, error) {
 
 	logger := log.WithValues("Service.Namespace", desiredService.Namespace, "Service.Name", desiredService.Name)
 

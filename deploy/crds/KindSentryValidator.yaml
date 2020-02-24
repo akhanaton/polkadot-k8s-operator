@@ -1,9 +1,9 @@
 # Copyright (c) 2020 Swisscom Blockchain AG
 # Licensed under MIT License
-apiVersion: cache.example.com/v1alpha1
-kind: CustomResource
+apiVersion: polkadot.swisscomblockchain.com/v1alpha1
+kind: Polkadot
 metadata:
-  name: polkadot-customresource
+  name: polkadot-cr
 spec:
   clientVersion: latest
   kind: "SentryAndValidator" # TODO define a check

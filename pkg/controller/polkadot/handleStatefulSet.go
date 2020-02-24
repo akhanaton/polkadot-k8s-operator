@@ -11,26 +11,60 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *ReconcilePolkadot) handleStatefulSet(CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
-
-	if CRKind(CRInstance.Spec.Kind) == Validator {
-		return r.handleStatefulSetSpecific(CRInstance, newValidatorStatefulSetForCR(CRInstance))
-	}
-	if CRKind(CRInstance.Spec.Kind) == Sentry {
-		return r.handleStatefulSetSpecific(CRInstance, newSentryStatefulSetForCR(CRInstance))
-	}
-	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
-		isForcedRequeue, err := r.handleStatefulSetSpecific(CRInstance, newSentryStatefulSetForCR(CRInstance))
-		if isForcedRequeue == ForcedRequeue || err != nil {
-			return isForcedRequeue, err
-		}
-		return r.handleStatefulSetSpecific(CRInstance, newValidatorStatefulSetForCR(CRInstance))
-	}
-
-	return defaultHandler()
+//pattern Strategy
+type IHandlerStatefulSet interface {
+	handleStatefulSetSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error)
 }
 
-func (r *ReconcilePolkadot) handleStatefulSetSpecific(CRInstance *polkadotv1alpha1.Polkadot, desiredResource *appsv1.StatefulSet) (bool, error) {
+type handlerStatefulSetValidator struct {
+}
+func (h *handlerStatefulSetValidator) handleStatefulSetSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
+	return r.handleStatefulSetGeneric(CRInstance, newValidatorStatefulSetForCR(CRInstance))
+}
+
+type handlerStatefulSetSentry struct {
+}
+func (h *handlerStatefulSetSentry) handleStatefulSetSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
+	return r.handleStatefulSetGeneric(CRInstance, newSentryStatefulSetForCR(CRInstance))
+}
+
+type handlerStatefulSetSentryAndValidator struct {
+}
+func (h *handlerStatefulSetSentryAndValidator) handleStatefulSetSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
+	isForcedRequeue, err := r.handleStatefulSetGeneric(CRInstance, newSentryStatefulSetForCR(CRInstance))
+	if isForcedRequeue == ForcedRequeue || err != nil {
+		return isForcedRequeue, err
+	}
+	return r.handleStatefulSetGeneric(CRInstance, newValidatorStatefulSetForCR(CRInstance))
+}
+
+type handlerStatefulSetDefault struct {
+}
+func (h *handlerStatefulSetDefault) handleStatefulSetSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
+	return handleSkip()
+}
+
+//pattern factory
+func getHandlerStatefulSet(CRInstance *polkadotv1alpha1.Polkadot) IHandlerStatefulSet {
+	if CRKind(CRInstance.Spec.Kind) == Validator {
+		return &handlerStatefulSetValidator{}
+	}
+	if CRKind(CRInstance.Spec.Kind) == Sentry {
+		return &handlerStatefulSetSentry{}
+	}
+	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
+		return &handlerStatefulSetSentryAndValidator{}
+	}
+	return &handlerStatefulSetDefault{}
+}
+
+func (r *ReconcilePolkadot) handleStatefulSet(CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
+
+	handler := getHandlerStatefulSet(CRInstance)
+	return handler.handleStatefulSetSpecific(r,CRInstance)
+}
+
+func (r *ReconcilePolkadot) handleStatefulSetGeneric(CRInstance *polkadotv1alpha1.Polkadot, desiredResource *appsv1.StatefulSet) (bool, error) {
 
 	logger := log.WithValues("Deployment.Namespace", desiredResource.Namespace, "Deployment.Name", desiredResource.Name)
 

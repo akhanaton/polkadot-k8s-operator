@@ -1,0 +1,79 @@
+# Docker compose file to simulate a sentry node setup.
+# run with docker-compose -f ./sentry-validator-compose.yaml up
+
+version: "3.7"
+services:
+  validator:
+    ports:
+      - "9944:9944"
+      - "30333:30333"
+    #    volumes:
+    #      - ../../target/release/substrate:/usr/local/bin/substrate
+    image: parity/polkadot:v0.7.20
+    #user: 1000:1000
+    volumes:
+      - "./testD/dataValidator:/polkadot"
+    networks:
+      - network-a
+    environment:
+      - VALIDATOR_NODE_KEY
+      - VALIDATOR_CHAIN
+      - VALIDATOR_PORT
+      - VALIDATOR_RESERVED_NODES
+    depends_on:
+      - "sentry"
+    command:
+      # Local node id: QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR
+      - "--validator"
+      #- "-d /polkadot"
+      - "--reserved-only"
+      - "--reserved-nodes"
+      - "${VALIDATOR_RESERVED_NODES:-/dns4/sentry/tcp/30334/p2p/QmV7EhW6J6KgmNdr558RH1mPx2xGGznW7At4BhXzntRFsi}"
+      - "--node-key"
+      - "${VALIDATOR_NODE_KEY:-0000000000000000000000000000000000000000000000000000000000000001}"
+      - "--port"
+      - "${VALIDATOR_PORT:-30333}"
+      - "-lsync=trace"
+      - "--unsafe-ws-external"
+      - "--unsafe-rpc-external"
+      - "--no-telemetry"
+      - "--rpc-cors=all"
+
+  sentry:
+    image: parity/polkadot:v0.7.20
+    volumes:
+      - "./testD/dataSentry:/polkadot"
+    ports:
+      - "9946:9944"
+      - "30334:30333"
+    #    volumes:
+    #      - ../../target/release/substrate:/usr/local/bin/substrate
+    networks:
+      - network-a
+      - internet
+    environment:
+      - SENTRY_NODE_KEY
+      - SENTRY_BASE_PATH
+      - SENTRY_CHAIN
+      - SENTRY_PORT
+      - SENTRY_NAME
+      - SENTRY_RESERVED_NODES
+    command:
+      # Local node id: QmV7EhW6J6KgmNdr558RH1mPx2xGGznW7At4BhXzntRFsi
+      - "--sentry"
+      #- "-d /tmp/data"
+      - "--reserved-nodes"
+      - "${SENTRY_RESERVED_NODES:-/dns4/validator/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR}"
+      - "--node-key"
+      - "${SENTRY_NODE_KEY:-0000000000000000000000000000000000000000000000000000000000000003}"
+      - "--port"
+      - "${SENTRY_PORT:-30333}"
+      # - "--bootnodes" # TODO check bootnodes
+      - "--no-telemetry"
+      - "--rpc-cors=all"
+      - "--ws-external"
+      - "--rpc-external"
+
+networks:
+  network-a:
+  internet:

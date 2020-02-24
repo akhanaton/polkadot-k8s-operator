@@ -17,6 +17,7 @@ type PolkadotSpec struct {
 	Kind string `json:"kind"`
 	Validator `json:"validator,omitempty"`
 	Sentry `json:"sentry,omitempty"`
+	IsNetworkPolicyActive string `json:"isNetworkPolicyActive,omitempty"`
 }
 
 type Validator struct {

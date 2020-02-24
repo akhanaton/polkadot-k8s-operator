@@ -7,6 +7,7 @@ metadata:
 spec:
   clientVersion: latest
   kind: "SentryAndValidator" # TODO define a check
+  isNetworkPolicyActive: "true"
   sentry:
     replicas: 1
     clientName: "IronoaSentry"

@@ -33,6 +33,8 @@ spec:
           properties:
             clientVersion:
               type: string
+            isNetworkPolicyActive:
+              type: string
             kind:
               type: string
             sentry:

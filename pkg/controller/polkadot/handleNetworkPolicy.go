@@ -30,9 +30,14 @@ func (h *handlerNPDefault) handleNPSpecific(r *ReconcilePolkadot, CRInstance *po
 
 //pattern factory
 func getHandlerNP(CRInstance *polkadotv1alpha1.Polkadot) IHandlerNP {
+	if CRInstance.Spec.IsNetworkPolicyActive != "true" {
+		return &handlerNPDefault{}
+	}
+
 	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
 		return &handlerNPSentryAndValidator{}
 	}
+
 	return &handlerNPDefault{}
 }
 

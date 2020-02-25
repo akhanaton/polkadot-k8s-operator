@@ -37,8 +37,8 @@ func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.St
 	nodeKey := CRInstance.Spec.Sentry.NodeKey
 	CPULimit := CRInstance.Spec.Sentry.CPULimit
 	memoryLimit := CRInstance.Spec.Sentry.MemoryLimit
-	volumeName := "polkadot-volume"
-	storageClassName := "default"
+	//volumeName := "polkadot-volume"
+	//storageClassName := "default" //TODO disabled due to permission denied
 	serviceName := "polkadot"
 
 	labels := getSentrylabels()
@@ -77,7 +77,7 @@ func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.St
 				MatchLabels: labels,
 			},
 			ServiceName: serviceName,
-			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{{
+			/*VolumeClaimTemplates: []corev1.PersistentVolumeClaim{{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: volumeName,
 				},
@@ -90,7 +90,7 @@ func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.St
 					},
 					StorageClassName: &storageClassName,
 				},
-			}},
+			}},*/ //TODO disabled due to permission denied
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
@@ -99,10 +99,10 @@ func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.St
 					Containers: []corev1.Container{{
 						Name:  serviceName,
 						Image: imageName + ":" + version,
-						VolumeMounts: []corev1.VolumeMount{{
+						/*VolumeMounts: []corev1.VolumeMount{{
 							Name:      volumeName,
 							MountPath: volumeMountPath,
-						}},
+						}},*/ //TODO disabled due to permission denied
 						Command: commands,
 						Ports: []corev1.ContainerPort{
 							{
@@ -148,8 +148,8 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 	nodeKey := CRInstance.Spec.Validator.NodeKey
 	CPULimit := CRInstance.Spec.Validator.CPULimit
 	memoryLimit := CRInstance.Spec.Validator.MemoryLimit
-	volumeName := "polkadot-volume"
-	storageClassName := "default"
+	//volumeName := "polkadot-volume"
+	//storageClassName := "default" //TODO disabled due to permission denied
 	serviceName := "polkadot"
 	//user := int64(1000)
 	//group := int64(1000)
@@ -192,7 +192,7 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 				MatchLabels: labels,
 			},
 			ServiceName: serviceName,
-			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{{
+			/*VolumeClaimTemplates: []corev1.PersistentVolumeClaim{{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: volumeName,
 				},
@@ -205,7 +205,7 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 					},
 					StorageClassName: &storageClassName,
 				},
-			}},
+			}},*/ //TODO disabled due to permission denied
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
@@ -222,10 +222,10 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 						//},
 						Name:  serviceName,
 						Image: imageName + ":" + version,
-						VolumeMounts: []corev1.VolumeMount{{
+						/*VolumeMounts: []corev1.VolumeMount{{
 							Name:      volumeName,
 							MountPath: volumeMountPath,
-						}},
+						}},*/ //TODO disabled due to permission denied
 						Command: commands,
 						Ports: []corev1.ContainerPort{
 							{

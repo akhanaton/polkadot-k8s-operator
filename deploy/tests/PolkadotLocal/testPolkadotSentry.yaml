@@ -19,22 +19,38 @@ spec:
         resources:
           requests:
             storage: 4Gi
-        storageClassName: polkadot
+        storageClassName: local
   template:
     metadata:
       labels:
         app: sentry
     spec:
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+      initContainers:
+        - name: volume-mount-permissions-data
+          image: busybox
+          command: ["sh", "-c", "chown -R 1000:1000 /data"]
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+          volumeMounts:
+            - name: polkadot-volume
+              mountPath: "/data"
       containers:
         - name: polkadot
           resources:
             limits:
               memory: "512Mi"
               cpu: "500m"
-          image: chevdor/polkadot
+          image: parity/polkadot
           command: [
             "polkadot",
             "--sentry",
+            "-d=/data",
             "--node-key", "0000000000000000000000000000000000000000000000000000000000000013", # Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
             "--reserved-nodes", "/dns4/polkadot-service-validator/tcp/30333/p2p/QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM",
             "--name", "IronoaSentry",
@@ -53,12 +69,12 @@ spec:
               name: http-rpc
             - containerPort: 9944
               name: websocket-rpc
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: http-rpc
-            initialDelaySeconds: 10
-            periodSeconds: 10
+          #readinessProbe:
+          #  httpGet:
+          #    path: /health
+          #    port: http-rpc
+          #  initialDelaySeconds: 10
+          #  periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /health
@@ -100,16 +116,16 @@ spec:
     matchLabels:
       app: validator
   serviceName: polkadot
-  volumeClaimTemplates:
-    - metadata:
-        name: polkadot-volume
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 4Gi
-        storageClassName: polkadot
+  #volumeClaimTemplates:
+  #  - metadata:
+  #      name: polkadot-volume
+  #    spec:
+  #      accessModes:
+  #        - ReadWriteOnce
+  #      resources:
+  #        requests:
+  #          storage: 4Gi
+  #      storageClassName: polkadot
   template:
     metadata:
       labels:
@@ -121,7 +137,7 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
-          image: chevdor/polkadot
+          image: parity/polkadot
           command: [
             "polkadot",
             "--validator",
@@ -129,14 +145,14 @@ spec:
             "--reserved-only",
             "--reserved-nodes", "/dns4/polkadot-service-sentry/tcp/30333/p2p/QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm",
             "--name", "IronoaValidator",
-            #"--unsafe-rpc-external",
-            #"--unsafe-ws-external",
-            #"--rpc-cors=all",
-            #"--no-telemetry",
+            "--unsafe-rpc-external",
+            "--unsafe-ws-external",
+            "--rpc-cors=all",
+            "--no-telemetry",
           ]
-          volumeMounts:
-            - mountPath: "/data"
-              name: polkadot-volume
+          #volumeMounts:
+          #  - mountPath: "/data"
+          #    name: polkadot-volume
           ports:
             - containerPort: 30333
               name: p2p
@@ -144,12 +160,12 @@ spec:
               name: http-rpc
             - containerPort: 9944
               name: websocket-rpc
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: http-rpc
-            initialDelaySeconds: 10
-            periodSeconds: 10
+          #readinessProbe:
+          #  httpGet:
+          #    path: /health
+          #    port: http-rpc
+          #  initialDelaySeconds: 10
+          #  periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /health

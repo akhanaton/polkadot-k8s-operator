@@ -22,4 +22,4 @@ spec:
     reservedSentryID: "QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm"
     CPULimit: "1"
     memoryLimit: "1Gi"
-    storageClassName: "default" #["default","managed-premium"]
+    storageClassName: "managed-premium" #["default","managed-premium"]

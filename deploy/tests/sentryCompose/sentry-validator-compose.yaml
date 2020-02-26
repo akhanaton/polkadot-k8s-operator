@@ -12,7 +12,7 @@ services:
     image: parity/polkadot:v0.7.20
     #user: 1000:1000
     volumes:
-      - "./testD/dataValidator:/polkadot"
+      - "./testD/dataValidator:/data"
     networks:
       - network-a
     environment:
@@ -25,7 +25,7 @@ services:
     command:
       # Local node id: QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR
       - "--validator"
-      #- "-d /polkadot"
+      - "-d=/data"
       - "--reserved-only"
       - "--reserved-nodes"
       - "${VALIDATOR_RESERVED_NODES:-/dns4/sentry/tcp/30334/p2p/QmV7EhW6J6KgmNdr558RH1mPx2xGGznW7At4BhXzntRFsi}"
@@ -42,7 +42,7 @@ services:
   sentry:
     image: parity/polkadot:v0.7.20
     volumes:
-      - "./testD/dataSentry:/polkadot"
+      - "./testD/dataSentry:/data"
     ports:
       - "9946:9944"
       - "30334:30333"
@@ -61,7 +61,7 @@ services:
     command:
       # Local node id: QmV7EhW6J6KgmNdr558RH1mPx2xGGznW7At4BhXzntRFsi
       - "--sentry"
-      #- "-d /tmp/data"
+      - "-d=/data"
       - "--reserved-nodes"
       - "${SENTRY_RESERVED_NODES:-/dns4/validator/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR}"
       - "--node-key"

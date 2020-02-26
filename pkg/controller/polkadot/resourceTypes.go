@@ -26,7 +26,8 @@ const (
 	validatorSSName        = "validator-sset"
 	sentrySSName           = "sentry-sset"
 	validatorNetworkPolicy = "validator-networkpolicy"
-	volumeMountPath        = "/polkadot"
+	volumeMountPath        = "/data"
+	volumeName 			   = "polkadot-volume"
 	storageRequest         = "10Gi"
 )
 
@@ -37,8 +38,7 @@ func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.St
 	nodeKey := CRInstance.Spec.Sentry.NodeKey
 	CPULimit := CRInstance.Spec.Sentry.CPULimit
 	memoryLimit := CRInstance.Spec.Sentry.MemoryLimit
-	//volumeName := "polkadot-volume"
-	//storageClassName := CRInstance.Spec.Sentry.StorageClassName //TODO disabled due to permission denied
+	storageClassName := CRInstance.Spec.Sentry.StorageClassName
 	serviceName := "polkadot"
 
 	labels := getSentrylabels()
@@ -49,6 +49,7 @@ func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.St
 		"--sentry",
 		"--node-key", nodeKey,
 		"--name", clientName,
+		"-d=" + volumeMountPath,
 		"--port",
 		strconv.Itoa(P2PPort),
 		"--rpc-port",
@@ -77,32 +78,21 @@ func newSentryStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.St
 				MatchLabels: labels,
 			},
 			ServiceName: serviceName,
-			/*VolumeClaimTemplates: []corev1.PersistentVolumeClaim{{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: volumeName,
-				},
-				Spec: corev1.PersistentVolumeClaimSpec{
-					AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-					Resources: corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							"storage": resource.MustParse(storageRequest),
-						},
-					},
-					StorageClassName: &storageClassName,
-				},
-			}},*/ //TODO disabled due to permission denied
+			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{ *getVolumeClaimTemplate(storageClassName) },
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
+					SecurityContext: getPodSecurityContext(),
+					InitContainers: []corev1.Container{ *getVolumePermissionInitContainer() },
 					Containers: []corev1.Container{{
 						Name:  serviceName,
 						Image: imageName + ":" + version,
-						/*VolumeMounts: []corev1.VolumeMount{{
+						VolumeMounts: []corev1.VolumeMount{{
 							Name:      volumeName,
 							MountPath: volumeMountPath,
-						}},*/ //TODO disabled due to permission denied
+						}},
 						Command: commands,
 						Ports: []corev1.ContainerPort{
 							{
@@ -148,11 +138,8 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 	nodeKey := CRInstance.Spec.Validator.NodeKey
 	CPULimit := CRInstance.Spec.Validator.CPULimit
 	memoryLimit := CRInstance.Spec.Validator.MemoryLimit
-	//volumeName := "polkadot-volume"
-	//storageClassName := CRInstance.Spec.Validator.StorageClassName //TODO disabled due to permission denied
+	storageClassName := CRInstance.Spec.Validator.StorageClassName
 	serviceName := "polkadot"
-	//user := int64(1000)
-	//group := int64(1000)
 
 	labels := getValidatorLabels()
 	labelsWithVersion := getCopyLabelsWithVersion(labels, version)
@@ -192,40 +179,21 @@ func newValidatorStatefulSetForCR(CRInstance *polkadotv1alpha1.Polkadot) *appsv1
 				MatchLabels: labels,
 			},
 			ServiceName: serviceName,
-			/*VolumeClaimTemplates: []corev1.PersistentVolumeClaim{{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: volumeName,
-				},
-				Spec: corev1.PersistentVolumeClaimSpec{
-					AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-					Resources: corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							"storage": resource.MustParse(storageRequest),
-						},
-					},
-					StorageClassName: &storageClassName,
-				},
-			}},*/ //TODO disabled due to permission denied
+			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{ *getVolumeClaimTemplate(storageClassName) },
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
-					//SecurityContext: &corev1.PodSecurityContext{
-					//	RunAsUser:          &user,
-					//	RunAsGroup:         &group,
-					//},
+					SecurityContext: getPodSecurityContext(),
+					InitContainers: []corev1.Container{ *getVolumePermissionInitContainer() },
 					Containers: []corev1.Container{{
-						//SecurityContext: corev1.SecurityContext{
-						//	RunAsUser:          &user,
-						//	RunAsGroup:         &group,
-						//},
 						Name:  serviceName,
 						Image: imageName + ":" + version,
-						/*VolumeMounts: []corev1.VolumeMount{{
+						VolumeMounts: []corev1.VolumeMount{{
 							Name:      volumeName,
 							MountPath: volumeMountPath,
-						}},*/ //TODO disabled due to permission denied
+						}},
 						Command: commands,
 						Ports: []corev1.ContainerPort{
 							{
@@ -366,6 +334,57 @@ func newValidatorNetworkPolicyForCR(CRInstance *polkadotv1alpha1.Polkadot) *v1.N
 					},
 				}},
 			}},
+		},
+	}
+}
+
+func getVolumePermissionInitContainer() *corev1.Container {
+	rootUser := int64(0)
+	runAsNonRootFalse := false
+
+	return &corev1.Container {
+		Name:  "volume-mount-permissions-data",
+		Image: "busybox",
+		VolumeMounts: []corev1.VolumeMount{{
+			Name:      volumeName,
+			MountPath: volumeMountPath,
+		}},
+		SecurityContext: &corev1.SecurityContext{
+			RunAsUser:          &rootUser,
+			RunAsNonRoot: &runAsNonRootFalse,
+		},
+		Command: []string{"sh", "-c", "chown -R 1000:1000 " + volumeMountPath},
+
+	}
+}
+
+func getPodSecurityContext() *corev1.PodSecurityContext {
+	user := int64(1000)
+	group := int64(1000)
+	runAsNonRoot := true
+
+	return &corev1.PodSecurityContext {
+		RunAsUser:          &user,
+		FSGroup:         &group,
+		RunAsGroup:      &group,
+		RunAsNonRoot: &runAsNonRoot,
+	}
+}
+
+func getVolumeClaimTemplate(storageClassName string) *corev1.PersistentVolumeClaim {
+	return &corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: volumeName,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+
+			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					"storage": resource.MustParse(storageRequest),
+				},
+			},
+			StorageClassName: &storageClassName,
 		},
 	}
 }

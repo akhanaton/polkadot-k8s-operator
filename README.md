@@ -55,6 +55,12 @@ The format is the usual kubernetes and docker standard (e.g. "500Mi")
 * nodeKey: (string)  
 Identity of the node, private (e.g. "0000000000000000000000000000000000000000000000000000000000000013")
 
+* storageClassName: (string)  
+Desired volume type. For instance, Azure provides two built in storage classes:
+    * "default": HHD backed
+    * "managed-premium": SSD backed, high performance
+    * See Data Persistence Support section for more information.     
+
 * kind: Sentry | Validator | SentryAndValidator (string)  
 Desired deployable configuration:
     * Sentry: deploy a Sentry only configuration
@@ -85,6 +91,15 @@ A tested working solution is using "Calico Network Policies" as network plugin o
 Reference: https://docs.microsoft.com/en-us/azure/aks/use-network-policies
 
 You can test the effectiveness of the network policy creating a new "default deny" one for the validator: it will not be able to communicate with the sentry (and even whit the external world) anymore. 
+
+## Data Persistence Support
+
+Deployments on Kubernetes are by their nature ephemeral. Thus it is important to  provide Kubernetes with support for data persistence – such as a virtual SSD in the cloud – so that new instances of the application can resume the state of the previous instance. It can be tested by killing a Stateful Set instance and then checking whether the state (block number synchronization) is resumed by the new instance.  
+
+The current solution is using a Kubernetes Persistent Volume Claim with Azure Disk.
+Reference: https://docs.microsoft.com/en-us/azure/aks/azure-disks-dynamic-pv
+
+If you want to test it locally, minikube provides the "local" built in storage classes: just set "local" to the storageClassName parameter. 
 
 ## About the Operator
 

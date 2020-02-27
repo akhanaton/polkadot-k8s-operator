@@ -35,31 +35,37 @@ Execute scripts/wipeAll.sh
 
 ## CR Configurable Parameters
 
-* Kind: Sentry|Validator|SentryAndValidator (string)
-Allows you to decide what to deploy:
-    * Sentry: deploy a Sentry node
-    * Validator: deploy a validator node
-    * SentryAndValidator: deploy a sentry and a validator in a secure configuration. The validator is allowed to communicate only through the sentry. This mechanism is enforced also via NetworkPolicy kubernetes native object, which requires a kubenet plugin installed in you cloud provided cluster (even in minikube) to work properly.
-        * In the SentryAndValidator configuration it must be passed also an additional parameter to both the sentry and the validator:
-        * reservedValidatorID: (string) Identity of the validator, it must be set for the sentry
-        * reservedSentryID: Identiry of the sentry, it must be set for the validator
-        
-            ![alt text](images/schema.png)
+* clientVersion: (string)  
+Image version of the clients. It is possible to change it at runtime: after the apply, the operator will automatically handle the client version update of the running pods.
 
-* replicas: (int)
-Allows you to decide how many Sentry replicas will be created. Validator replica size is always hard coded to one and it is not possible to change it to prevent concurrent validation issues.
+* isNetworkPolicyActive: (string)  
+If set to "true", the operator will handle the creation and the deployment of a Network Policy object that will ensure the secureness of the Validator (it only affects the Kind "SentryAndValidator"). 
+
+* replicas: (int)  
+Allows to decide how many Sentry replicas will be created. In any case, Validator replica size is always hard coded to one and it is not possible to change it to prevent concurrent validation issues.
 
 * clientName: (string)
 
-* CPULimit: (string)
+* CPULimit: (string)  
 The format is the usual kubernetes and docker standard (e.g. "0.5")
 
-* memoryLimit: (string)
+* memoryLimit: (string)  
 The format is the usual kubernetes and docker standard (e.g. "500Mi")
 
-* nodeKey: (string)
+* nodeKey: (string)  
 Identity of the node, private (e.g. "0000000000000000000000000000000000000000000000000000000000000013")
 
+* kind: Sentry | Validator | SentryAndValidator (string)  
+Desired deployable configuration:
+    * Sentry: deploy a Sentry only configuration
+    * Validator: deploy a Validator only configuration
+    * SentryAndValidator: deploy a Sentry and Validator configuration. If "isNetworkPolicyActive" parameter is set to "true", the Validator is allowed to communicate only through the Sentry. This mechanism is enforced via NetworkPolicy (kubernetes native object), which requires a network plugin installed in you cloud provided cluster (even in minikube) to work properly. See Secure Communications section.
+        * In the SentryAndValidator configuration it must be passed an additional parameter to both the sentry and the validator:
+        * reservedValidatorID: (string) Identity of the Validator, it must be set on the Sentry
+        * reservedSentryID: (string) Identity of the Sentry, it must be set on the Validator
+        
+            ![alt text](images/schema.png)
+            
 ## Secure Communications (Kind:SentryAndValidator)
 
 The configuration is based on the official "polkadot-secure-validator" guidelines: https://github.com/w3f/polkadot-secure-validator
@@ -75,7 +81,7 @@ Network policies are implemented by the network plugin. To use network policies,
 
 ### Azure Example
 
-A tested working solution is using "Calico Network Policies" as an network plugin on an Azure Kubernetes Service. 
+A tested working solution is using "Calico Network Policies" as network plugin on an Azure Kubernetes Service. 
 Reference: https://docs.microsoft.com/en-us/azure/aks/use-network-policies
 
 You can test the effectiveness of the network policy creating a new "default deny" one for the validator: it will not be able to communicate with the sentry (and even whit the external world) anymore. 

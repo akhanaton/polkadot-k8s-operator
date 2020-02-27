@@ -6,7 +6,7 @@ metadata:
   name: polkadot-cr
 spec:
   clientVersion: latest
-  kind: "SentryAndValidator" # TODO define a check
+  kind: "SentryAndValidator"
   isNetworkPolicyActive: "true"
   sentry:
     replicas: 1

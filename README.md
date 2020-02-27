@@ -41,13 +41,13 @@ Execute scripts/wipeAll.sh
 ## Polkadot CR Configurable Parameters
 
 * clientVersion: (string)  
-Image version of the clients. It is possible to change it at runtime: after the apply, the operator will automatically handle the client version update of the running pods.
+Image version of the clients. See the Updating of Node Versions section.
 
 * isNetworkPolicyActive: (string)  
-If set to "true", the operator will handle the creation and the deployment of a Network Policy object that will ensure the secureness of the Validator (it only affects the Kind "SentryAndValidator"). 
+If set to "true", the operator will handle the creation and the deployment of a Network Policy object that will ensure the secureness of the Validator (it only affects the Kind "SentryAndValidator"). See the Secure Communications section.
 
 * replicas: (int)  
-Allows to decide how many Sentry replicas will be created. In any case, Validator replica size is always hard coded to one and it is not possible to change it to prevent concurrent validation issues.
+Allows to decide how many Sentry replicas will be created. See the Node Cluster Scaling Support section.
 
 * clientName: (string)
 
@@ -76,10 +76,19 @@ Desired deployable configuration:
         * reservedSentryID: (string) Identity of the Sentry, it must be set on the Validator
         
             ![alt text](images/schema.png)
+
+## Updating of Node Versions
+
+It is possible to change the Client Nodes Version at runtime (kubectl apply): the operator will automatically handle the clients version update of all the running pods.
+
+## Node Cluster Scaling Support
+
+This is the ability of the operator to respond to scale operations defined in the deployed configuration, for example to extend the amount of sentry nodes from 3 to 4. The correct functioning can be tested by executing such an operation and checking the number of deployed instances before and afterwards.  
+In any case, Validator replica size is always hard coded to one and it is not possible to change it to prevent concurrent validation issues.
             
 ## Secure Communications (Kind:SentryAndValidator)
 
-The configuration is based on the official "polkadot-secure-validator" guidelines: https://github.com/w3f/polkadot-secure-validator
+The configuration is based on the "polkadot-secure-validator" guidelines: https://github.com/w3f/polkadot-secure-validator
 
 ### Network Policies
 

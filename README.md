@@ -4,11 +4,16 @@ Licensed under MIT License
 
 # PolkaKop - Kubernetes Operator for Polkadot 
 
-Kubernetes Operator for sentry nodes and validators.
+Kubernetes Operator for Polkadot Sentry and Validators nodes.
+
+Client - Rust implementation of the Polkadot Host: https://github.com/paritytech/polkadot
+
+The Polkadot Project: https://wiki.polkadot.network/en/
+
 
 ## Polkadot Custom Resource 
 
-The CR (Custom Resource) is called "Polkadot"
+The deployable CR (Custom Resource) is called "Polkadot"
 
 ## Requirements
 
@@ -21,7 +26,7 @@ The CR (Custom Resource) is called "Polkadot"
 
 ## How To Run
 
-Deploy to your favorite kubernetes cloud provided cluster (even minikube) a Custom Controller and a Polkadot Custom Resource. The Controller will create and supervise all the necessary resource needed to run a Polkadot (Rust) Client.
+Deploy to your favorite kubernetes cloud provided cluster (even minikube) a Custom Controller and a Polkadot Custom Resource. The Controller will create and supervise all the necessary resources needed to run a Polkadot Client configuration.
 
 0. Configure your kubectl to work with your desired Kubernetes cluster 
     (e.g. Azure: az aks get-credentials --resource-group myResourceGroup --name myAKSCluster)
@@ -33,7 +38,7 @@ Deploy to your favorite kubernetes cloud provided cluster (even minikube) a Cust
 
 Execute scripts/wipeAll.sh
 
-## CR Configurable Parameters
+## Polkadot CR Configurable Parameters
 
 * clientVersion: (string)  
 Image version of the clients. It is possible to change it at runtime: after the apply, the operator will automatically handle the client version update of the running pods.
@@ -88,7 +93,7 @@ You can test the effectiveness of the network policy creating a new "default den
 
 ## About the Operator
 
-An Operator is a method of packaging, deploying and managing a Kubernetes application. A Kubernetes application is an application that is both deployed on Kubernetes and managed using the Kubernetes APIs and kubectl tooling. To be able to make the most of Kubernetes, you need a set of cohesive APIs to extend in order to service and manage your applications that run on Kubernetes. You can think of Operators as the runtime that manages this type of application on Kubernetes.
+An Operator is a method of packaging, deploying and managing a Kubernetes application. A Kubernetes application is an application that is both deployed on Kubernetes and managed using the Kubernetes APIs and kubectl tooling. You can think of Operators as the runtime that manages this type of application on Kubernetes.
 
 Reference: https://coreos.com/blog/introducing-operator-framework
 

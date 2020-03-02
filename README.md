@@ -1,4 +1,4 @@
-Copyright (c) 2020 Swisscom Blockchain AG
+Copyright (c) 2020 Swisscom Blockchain AG  
 Licensed under MIT License
 
 # PolkaKop - Kubernetes Operator for Polkadot 

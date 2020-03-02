@@ -138,5 +138,5 @@ func handleRequeueForced (err error, logger logr.Logger) (reconcile.Result, erro
 
 func handleRequeueStd (err error, logger logr.Logger) (reconcile.Result, error){
 	logger.Info("Return and not requeing the request")
-	return reconcile.Result{Requeue: true}, nil
+	return reconcile.Result{}, nil
 }

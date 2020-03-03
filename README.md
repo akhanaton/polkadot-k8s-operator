@@ -52,10 +52,6 @@ Deploy to your favorite kubernetes cloud provided cluster (even minikube) a Cust
 2. In both deploy/operator.yaml and scripts/compileAndDeployOperator.sh configure the images to point to your favourite Container Registry
 3. execute scripts/init.sh
 
-### How To Tutorial with Minikube on Mac
-
-
-
 ## Clean up resources
 
 Execute scripts/wipeAll.sh

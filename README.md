@@ -15,11 +15,20 @@ The deployable CR (Custom Resource) is called "Polkadot"
 
 ## Requirements
 
-* Docker
-* Kubernetes kubectl
-* Go compiler
-* Access to a container registry
-* Operator SDK CLI (https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md)
+* Docker  
+Mac: https://docs.docker.com/docker-for-mac/  
+Linux: https://docs.docker.com/install/linux/docker-ce/ubuntu/
+* The Kubernetes command-line tool, kubectl  
+Mac: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos  
+Linux: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-using-native-package-management
+* Go compiler  
+Mac, Linux, Windows, official website: https://golang.org/doc/install  
+Mac, Homebrew: https://ahmadawais.com/install-go-lang-on-macos-with-homebrew/
+* Access to a Container Registry  
+Docker Hub: https://hub.docker.com/signup
+* Operator SDK CLI   
+Mac, Homebrew: https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md#install-from-homebrew-macos  
+Linux: https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md#install-from-github-release
 * Optional (SentryAndValidator secure deployment): network plugin, see the Secure Communications section
 
 ## How To Run
@@ -31,6 +40,11 @@ Deploy to your favorite kubernetes cloud provided cluster (even minikube) a Cust
 1. Clone the repository locally
 2. In both deploy/operator.yaml and scripts/compileAndDeployOperator.sh configure the images to point to your favourite Container Registry
 3. execute scripts/init.sh
+
+### How To Tutorial with Minikube on Mac
+
+
+
 
 ## Clean up resources
 

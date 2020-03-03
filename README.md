@@ -68,7 +68,7 @@ $ cd polkadot-k8s-operator
 
 ### Parameters tuning
 
-Example of a deployable deploy/crds/polkadot.swisscomblockchain.com_v1alpha1_polkadot_cr.yaml in a "SentryAndValidator" configuration.
+Example of a deployable deploy/crds/polkadot.swisscomblockchain.com_v1alpha1_polkadot_cr.yaml in a "SentryAndValidator" configuration.  
 Note that if you deploy the operator locally, it is important to limit the the CPU and the memory usage (due to minikube limitations)
 ```yaml
 # Copyright (c) 2020 Swisscom Blockchain AG
@@ -272,6 +272,9 @@ customresourcedefinition.apiextensions.k8s.io "polkadots.polkadot.swisscomblockc
 rolebinding.rbac.authorization.k8s.io "polkadot-operator" deleted
 role.rbac.authorization.k8s.io "polkadot-operator" deleted
 serviceaccount "polkadot-operator" deleted
+
+# stop Minikube
+$ minikube stop
 ```
 
 ## Polkadot CR Configurable Parameters
@@ -339,7 +342,8 @@ You can test the effectiveness of the network policy creating a new "default den
 
 ## About Kubernetes
 
-Kubernetes (K8s) is an open-source system for automating deployment, scaling, and management of containerized applications.
+Kubernetes (K8s) is an open-source system for automating deployment, scaling, and management of containerized applications.  
+
 Reference: https://kubernetes.io/
 
 ## About the Operator

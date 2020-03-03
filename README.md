@@ -30,7 +30,7 @@ Mac, Homebrew: https://ahmadawais.com/install-go-lang-on-macos-with-homebrew/
 * Access to a Container Registry  
 Docker Hub: https://hub.docker.com/signup
 
-* Operator SDK CLI tool
+* Operator SDK CLI tool  
 Mac, Homebrew: https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md#install-from-homebrew-macos  
 Linux: https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md#install-from-github-release
 

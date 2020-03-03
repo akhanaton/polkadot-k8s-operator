@@ -49,7 +49,7 @@ Deploy to your favorite kubernetes cloud provided cluster (even minikube) a Cust
 0. Configure your kubectl to work with your desired Kubernetes cluster 
     (e.g. Azure: az aks get-credentials --resource-group myResourceGroup --name myAKSCluster)
 1. Clone the repository locally
-2. In both deploy/operator.yaml and scripts/compileAndDeployOperator.sh configure the images to point to your favourite Container Registry
+2. In both deploy/operator.yaml and scripts/utils/compileAndDeployOperator.sh configure the images to point to your favourite Container Registry
 3. execute scripts/init.sh
 
 ## Clean up resources
@@ -58,10 +58,18 @@ Execute scripts/wipeAll.sh
 
 ## How To Tutorial with Minikube on Mac
 
+### Clone the repository
+
+```sh
+# Clone the repository
+$ git clone https://github.com/swisscom-blockchain/polkadot-k8s-operator.git
+$ cd polkadot-k8s-operator
+```
+
 ### Parameters tuning
 
 Example of a deployable deploy/crds/polkadot.swisscomblockchain.com_v1alpha1_polkadot_cr.yaml in a "SentryAndValidator" configuration.
-Note that if you deploy the operator locally, is important to limit the the CPU and the memory usage (minikube limitations)
+Note that if you deploy the operator locally, it is important to limit the the CPU and the memory usage (due to minikube limitations)
 ```yaml
 # Copyright (c) 2020 Swisscom Blockchain AG
 # Licensed under MIT License
@@ -136,10 +144,6 @@ kubectl create -f deploy/operator.yaml
 ### Deployment phase
 
 ```sh
-# Clone the repository
-$ git clone https://github.com/swisscom-blockchain/polkadot-k8s-operator.git
-$ cd polkadot-k8s-operator
-
 # start Minikube
 $ minikube start
 
@@ -148,7 +152,7 @@ $ kubectl get nodes
 NAME       STATUS   ROLES    AGE   VERSION
 minikube   Ready    master   6d    v1.17.3
 
-# compile the go project, create the docker image, push the image to the container registry, deploy the k8s resource to the cluster
+# compile the go project, create the docker image, push the image to the container registry, deploy the k8s resources to the cluster
 $ ./scripts/init.sh
 serviceaccount/polkadot-operator created
 role.rbac.authorization.k8s.io/polkadot-operator created

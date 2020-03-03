@@ -56,7 +56,7 @@ Deploy to your favorite kubernetes cloud provided cluster (even minikube) a Cust
 
 Execute scripts/wipeAll.sh
 
-## How To Tutorial with Minikube on Mac
+## How To Tutorial with Minikube
 
 ### Clone the repository
 
@@ -336,6 +336,11 @@ A tested working solution is using "Calico Network Policies" as network plugin o
 Reference: https://docs.microsoft.com/en-us/azure/aks/use-network-policies
 
 You can test the effectiveness of the network policy creating a new "default deny" one for the validator: it will not be able to communicate with the sentry (and even whit the external world) anymore. 
+
+## About Kubernetes
+
+Kubernetes (K8s) is an open-source system for automating deployment, scaling, and management of containerized applications.
+Reference: https://kubernetes.io/
 
 ## About the Operator
 

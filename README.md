@@ -34,7 +34,13 @@ Docker Hub: https://hub.docker.com/signup
 Mac, Homebrew: https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md#install-from-homebrew-macos  
 Linux: https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md#install-from-github-release
 
-* Optional (SentryAndValidator secure deployment): network plugin, see the Secure Communications section
+### Optionals
+
+* Kubernetes Cluster Network Plugin: network plugin, see the Secure Communications section (SentryAndValidator secure deployment)
+
+* Minikube, a tool that runs a single-node Kubernetes cluster in your local environment   
+Mac: https://kubernetes.io/docs/tasks/tools/install-minikube/#install-minikube  
+Linux: https://kubernetes.io/docs/tasks/tools/install-minikube/#install-minikube-using-a-package
 
 ## How To Run
 
@@ -45,6 +51,10 @@ Deploy to your favorite kubernetes cloud provided cluster (even minikube) a Cust
 1. Clone the repository locally
 2. In both deploy/operator.yaml and scripts/compileAndDeployOperator.sh configure the images to point to your favourite Container Registry
 3. execute scripts/init.sh
+
+### How To Tutorial with Minikube on Mac
+
+
 
 ## Clean up resources
 

@@ -63,19 +63,20 @@ func (h *handlerServiceDefault) handleServiceSpecific(r *ReconcilerPolkadot, CRI
 	return handleSkip()
 }
 
-func (r *ReconcilerPolkadot) handleServiceGeneric(CRInstance *polkadotv1alpha1.Polkadot, desiredService *corev1.Service) (bool, error) {
+func (r *ReconcilerPolkadot) handleServiceGeneric(CRInstance *polkadotv1alpha1.Polkadot, desiredResource *corev1.Service) (bool, error) {
 
-	logger := log.WithValues("Service.Namespace", desiredService.Namespace, "Service.Name", desiredService.Name)
+	logger := log.WithValues("Service.Namespace", desiredResource.Namespace, "Service.Name", desiredResource.Name)
 
-	foundService, err := r.fetchService(desiredService)
+	toBeFoundResource := &corev1.Service{}
+	isNotFound,err := r.fetchResource(toBeFoundResource,types.NamespacedName{Name: desiredResource.Name, Namespace: desiredResource.Namespace})
 	if err != nil {
 		logger.Error(err, "Error on fetch the Service...")
 		return NotForcedRequeue, err
 	}
-	if foundService == nil {
+	if isNotFound == true {
 		logger.Info("Service not found...")
 		logger.Info("Creating a new Service...")
-		err := r.createResource(desiredService, CRInstance, logger)
+		err := r.createResource(desiredResource, CRInstance, logger)
 		if err != nil {
 			logger.Error(err, "Error on creating a new Service...")
 			return NotForcedRequeue, err
@@ -83,10 +84,11 @@ func (r *ReconcilerPolkadot) handleServiceGeneric(CRInstance *polkadotv1alpha1.P
 		logger.Info("Created the new Service")
 		return ForcedRequeue, nil
 	}
+	foundResource := toBeFoundResource
 
-	if areServicesDifferent(foundService, desiredService, logger) {
+	if areServicesDifferent(foundResource, desiredResource, logger) {
 		logger.Info("Updating the Service...")
-		err := r.updateService(desiredService, logger)
+		err := r.updateService(desiredResource, logger)
 		if err != nil {
 			logger.Error(err, "Update Service Error...")
 			return NotForcedRequeue, err

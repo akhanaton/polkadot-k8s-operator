@@ -11,8 +11,8 @@ import (
 func (r *ReconcilerPolkadot) handleCustomResource(request reconcile.Request) (*polkadotv1alpha1.Polkadot, error) {
 	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 
-	toBeFound := &polkadotv1alpha1.Polkadot{}
-	isNotFound, err := r.fetchResource(toBeFound, types.NamespacedName{Name: request.Name, Namespace: request.Namespace})
+	toBeFoundResource := &polkadotv1alpha1.Polkadot{}
+	isNotFound, err := r.fetchResource(toBeFoundResource, types.NamespacedName{Name: request.Name, Namespace: request.Namespace})
 	if err != nil {
 		logger.Error(err, "Error on fetch the Custom Resource...")
 		return nil, err
@@ -24,6 +24,7 @@ func (r *ReconcilerPolkadot) handleCustomResource(request reconcile.Request) (*p
 		logger.Info("Custom Resource not found...")
 		return nil, nil
 	}
+	foundResource := toBeFoundResource
 
-	return toBeFound, nil
+	return foundResource, nil
 }

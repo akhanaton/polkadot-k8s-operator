@@ -66,8 +66,8 @@ func (r *ReconcilerPolkadot) handleStatefulSetGeneric(CRInstance *polkadotv1alph
 
 	logger := log.WithValues("Deployment.Namespace", desiredResource.Namespace, "Deployment.Name", desiredResource.Name)
 
-	toBeFound := &appsv1.StatefulSet{}
-	isNotFound, err := r.fetchResource(toBeFound,types.NamespacedName{Name: desiredResource.Name, Namespace: desiredResource.Namespace})
+	toBeFoundResource := &appsv1.StatefulSet{}
+	isNotFound, err := r.fetchResource(toBeFoundResource,types.NamespacedName{Name: desiredResource.Name, Namespace: desiredResource.Namespace})
 	if err != nil {
 		logger.Error(err, "Error on fetch the StatefulSet...")
 		return NotForcedRequeue, err
@@ -83,7 +83,7 @@ func (r *ReconcilerPolkadot) handleStatefulSetGeneric(CRInstance *polkadotv1alph
 		logger.Info("Created the new StatefulSet")
 		return ForcedRequeue, nil
 	}
-	foundResource := toBeFound
+	foundResource := toBeFoundResource
 
 	if areStatefulSetDifferent(foundResource, desiredResource, logger) {
 		logger.Info("Updating the StatefulSet...")

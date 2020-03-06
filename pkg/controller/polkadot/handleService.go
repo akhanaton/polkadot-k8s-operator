@@ -3,11 +3,9 @@
 package polkadot
 
 import (
-	"context"
 	"github.com/go-logr/logr"
 	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -88,7 +86,7 @@ func (r *ReconcilerPolkadot) handleServiceGeneric(CRInstance *polkadotv1alpha1.P
 
 	if areServicesDifferent(foundResource, desiredResource, logger) {
 		logger.Info("Updating the Service...")
-		err := r.updateService(desiredResource, logger)
+		err := r.updateResource(desiredResource)
 		if err != nil {
 			logger.Error(err, "Update Service Error...")
 			return NotForcedRequeue, err
@@ -99,20 +97,7 @@ func (r *ReconcilerPolkadot) handleServiceGeneric(CRInstance *polkadotv1alpha1.P
 	return NotForcedRequeue, nil
 }
 
-func (r *ReconcilerPolkadot) fetchService(service *corev1.Service) (*corev1.Service, error) {
-	found := &corev1.Service{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: service.Name, Namespace: service.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		return nil, nil
-	}
-	return found, err
-}
-
 func areServicesDifferent(currentService *corev1.Service, desiredService *corev1.Service, logger logr.Logger) bool {
 	result := false
 	return result
-}
-
-func (r *ReconcilerPolkadot) updateService(service *corev1.Service, logger logr.Logger) error {
-	return r.client.Update(context.TODO(), service)
 }

@@ -7,7 +7,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (r *ReconcilePolkadot) setOwnership(owner metav1.Object, owned metav1.Object) error {
+func (r *ReconcilerPolkadot) setOwnership(owner metav1.Object, owned metav1.Object) error {
 	return controllerutil.SetControllerReference(owner, owned, r.scheme)
 }
 

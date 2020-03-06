@@ -9,7 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (r *ReconcilePolkadot) handleCustomResource(request reconcile.Request) (*polkadotv1alpha1.Polkadot, error) {
+func (r *ReconcilerPolkadot) handleCustomResource(request reconcile.Request) (*polkadotv1alpha1.Polkadot, error) {
 	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 
 	found, err := r.fetchCustomResource(request)
@@ -25,7 +25,7 @@ func (r *ReconcilePolkadot) handleCustomResource(request reconcile.Request) (*po
 	return found, nil
 }
 
-func (r *ReconcilePolkadot) fetchCustomResource(request reconcile.Request) (*polkadotv1alpha1.Polkadot, error) {
+func (r *ReconcilerPolkadot) fetchCustomResource(request reconcile.Request) (*polkadotv1alpha1.Polkadot, error) {
 	found := &polkadotv1alpha1.Polkadot{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, found)
 	if err != nil && errors.IsNotFound(err) {

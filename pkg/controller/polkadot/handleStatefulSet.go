@@ -11,37 +11,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-//pattern Strategy
-type IHandlerStatefulSet interface {
-	handleStatefulSetSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error)
-}
-
-type handlerStatefulSetValidator struct {
-}
-func (h *handlerStatefulSetValidator) handleStatefulSetSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
-	return r.handleStatefulSetGeneric(CRInstance, newValidatorStatefulSetForCR(CRInstance))
-}
-
-type handlerStatefulSetSentry struct {
-}
-func (h *handlerStatefulSetSentry) handleStatefulSetSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
-	return r.handleStatefulSetGeneric(CRInstance, newSentryStatefulSetForCR(CRInstance))
-}
-
-type handlerStatefulSetSentryAndValidator struct {
-}
-func (h *handlerStatefulSetSentryAndValidator) handleStatefulSetSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
-	isForcedRequeue, err := r.handleStatefulSetGeneric(CRInstance, newSentryStatefulSetForCR(CRInstance))
-	if isForcedRequeue == ForcedRequeue || err != nil {
-		return isForcedRequeue, err
-	}
-	return r.handleStatefulSetGeneric(CRInstance, newValidatorStatefulSetForCR(CRInstance))
-}
-
-type handlerStatefulSetDefault struct {
-}
-func (h *handlerStatefulSetDefault) handleStatefulSetSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
-	return handleSkip()
+func (r *ReconcilerPolkadot) handleStatefulSet(CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
+	handler := getHandlerStatefulSet(CRInstance)
+	return handler.handleStatefulSetSpecific(r,CRInstance)
 }
 
 //pattern factory
@@ -58,13 +30,40 @@ func getHandlerStatefulSet(CRInstance *polkadotv1alpha1.Polkadot) IHandlerStatef
 	return &handlerStatefulSetDefault{}
 }
 
-func (r *ReconcilePolkadot) handleStatefulSet(CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
-
-	handler := getHandlerStatefulSet(CRInstance)
-	return handler.handleStatefulSetSpecific(r,CRInstance)
+//pattern Strategy
+type IHandlerStatefulSet interface {
+	handleStatefulSetSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error)
 }
 
-func (r *ReconcilePolkadot) handleStatefulSetGeneric(CRInstance *polkadotv1alpha1.Polkadot, desiredResource *appsv1.StatefulSet) (bool, error) {
+type handlerStatefulSetValidator struct {
+}
+func (h *handlerStatefulSetValidator) handleStatefulSetSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
+	return r.handleStatefulSetGeneric(CRInstance, newValidatorStatefulSetForCR(CRInstance))
+}
+
+type handlerStatefulSetSentry struct {
+}
+func (h *handlerStatefulSetSentry) handleStatefulSetSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
+	return r.handleStatefulSetGeneric(CRInstance, newSentryStatefulSetForCR(CRInstance))
+}
+
+type handlerStatefulSetSentryAndValidator struct {
+}
+func (h *handlerStatefulSetSentryAndValidator) handleStatefulSetSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
+	isForcedRequeue, err := r.handleStatefulSetGeneric(CRInstance, newSentryStatefulSetForCR(CRInstance))
+	if isForcedRequeue == ForcedRequeue || err != nil {
+		return isForcedRequeue, err
+	}
+	return r.handleStatefulSetGeneric(CRInstance, newValidatorStatefulSetForCR(CRInstance))
+}
+
+type handlerStatefulSetDefault struct {
+}
+func (h *handlerStatefulSetDefault) handleStatefulSetSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
+	return handleSkip()
+}
+
+func (r *ReconcilerPolkadot) handleStatefulSetGeneric(CRInstance *polkadotv1alpha1.Polkadot, desiredResource *appsv1.StatefulSet) (bool, error) {
 
 	logger := log.WithValues("Deployment.Namespace", desiredResource.Namespace, "Deployment.Name", desiredResource.Name)
 
@@ -98,7 +97,7 @@ func (r *ReconcilePolkadot) handleStatefulSetGeneric(CRInstance *polkadotv1alpha
 	return NotForcedRequeue, nil
 }
 
-func (r *ReconcilePolkadot) fetchStatefulSet(obj *appsv1.StatefulSet) (*appsv1.StatefulSet, error) {
+func (r *ReconcilerPolkadot) fetchStatefulSet(obj *appsv1.StatefulSet) (*appsv1.StatefulSet, error) {
 	found := &appsv1.StatefulSet{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: obj.Name, Namespace: obj.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
@@ -107,7 +106,7 @@ func (r *ReconcilePolkadot) fetchStatefulSet(obj *appsv1.StatefulSet) (*appsv1.S
 	return found, err
 }
 
-func (r *ReconcilePolkadot) createStatefulSet(statefulSet *appsv1.StatefulSet, CRInstance *polkadotv1alpha1.Polkadot, logger logr.Logger) error {
+func (r *ReconcilerPolkadot) createStatefulSet(statefulSet *appsv1.StatefulSet, CRInstance *polkadotv1alpha1.Polkadot, logger logr.Logger) error {
 	err := r.setOwnership(CRInstance, statefulSet)
 	if err != nil {
 		logger.Error(err, "Error on setting the ownership...")
@@ -117,7 +116,7 @@ func (r *ReconcilePolkadot) createStatefulSet(statefulSet *appsv1.StatefulSet, C
 	return err
 }
 
-func (r *ReconcilePolkadot) updateStatefulSet(obj *appsv1.StatefulSet) error {
+func (r *ReconcilerPolkadot) updateStatefulSet(obj *appsv1.StatefulSet) error {
 	return r.client.Update(context.TODO(), obj)
 }
 

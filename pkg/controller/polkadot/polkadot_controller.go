@@ -19,10 +19,13 @@ import (
 
 var log = logf.Log.WithName("controller_polkadot")
 
-/**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
- */
+// ReconcilerPolkadot reconciles a Polkadot object
+type ReconcilerPolkadot struct {
+	// This client, initialized using mgr.Client() above, is a split client
+	// that reads objects from the cache and writes to the apiserver
+	client client.Client
+	scheme *runtime.Scheme
+}
 
 // Add creates a new Polkadot Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -32,7 +35,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcilePolkadot{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcilerPolkadot{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -72,20 +75,12 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-// blank assignment to verify that ReconcilePolkadot implements reconcile.Reconciler
-var _ reconcile.Reconciler = &ReconcilePolkadot{}
-
-// ReconcilePolkadot reconciles a Polkadot object
-type ReconcilePolkadot struct {
-	// This client, initialized using mgr.Client() above, is a split client
-	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
-}
+// blank assignment to verify that ReconcilerPolkadot implements reconcile.Reconciler
+var _ reconcile.Reconciler = &ReconcilerPolkadot{}
 
 // Reconcile reads that state of the cluster for a CustomResource object and makes changes based on the state read
 // and what is in the CustomResource.Spec
-func (r *ReconcilePolkadot) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcilerPolkadot) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	logger.Info("Reconciling CustomResource")
 

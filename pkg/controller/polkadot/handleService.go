@@ -11,37 +11,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-//pattern Strategy
-type IHandlerService interface {
-	handleServiceSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error)
-}
-
-type handlerServiceValidator struct {
-}
-func (h *handlerServiceValidator) handleServiceSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
-	return r.handleServiceGeneric(CRInstance,newValidatorServiceForCR(CRInstance))
-}
-
-type handlerServiceSentry struct {
-}
-func (h *handlerServiceSentry) handleServiceSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
-	return r.handleServiceGeneric(CRInstance,newSentryServiceForCR(CRInstance))
-}
-
-type handlerServiceSentryAndValidator struct {
-}
-func (h *handlerServiceSentryAndValidator) handleServiceSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
-	isForcedRequeue, err := r.handleServiceGeneric(CRInstance, newSentryServiceForCR(CRInstance))
-	if isForcedRequeue == ForcedRequeue || err != nil {
-		return isForcedRequeue, err
-	}
-	return r.handleServiceGeneric(CRInstance, newValidatorServiceForCR(CRInstance))
-}
-
-type handlerServiceDefault struct {
-}
-func (h *handlerServiceDefault) handleServiceSpecific(r *ReconcilePolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
-	return handleSkip()
+func (r *ReconcilerPolkadot) handleService(CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
+	handler := getHandlerService(CRInstance)
+	return handler.handleServiceSpecific(r,CRInstance)
 }
 
 //pattern factory
@@ -58,12 +30,40 @@ func getHandlerService(CRInstance *polkadotv1alpha1.Polkadot) IHandlerService {
 	return &handlerServiceDefault{}
 }
 
-func (r *ReconcilePolkadot) handleService(CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
-	handler := getHandlerService(CRInstance)
-	return handler.handleServiceSpecific(r,CRInstance)
+//pattern Strategy
+type IHandlerService interface {
+	handleServiceSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error)
 }
 
-func (r *ReconcilePolkadot) handleServiceGeneric(CRInstance *polkadotv1alpha1.Polkadot, desiredService *corev1.Service) (bool, error) {
+type handlerServiceValidator struct {
+}
+func (h *handlerServiceValidator) handleServiceSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
+	return r.handleServiceGeneric(CRInstance,newValidatorServiceForCR(CRInstance))
+}
+
+type handlerServiceSentry struct {
+}
+func (h *handlerServiceSentry) handleServiceSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
+	return r.handleServiceGeneric(CRInstance,newSentryServiceForCR(CRInstance))
+}
+
+type handlerServiceSentryAndValidator struct {
+}
+func (h *handlerServiceSentryAndValidator) handleServiceSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
+	isForcedRequeue, err := r.handleServiceGeneric(CRInstance, newSentryServiceForCR(CRInstance))
+	if isForcedRequeue == ForcedRequeue || err != nil {
+		return isForcedRequeue, err
+	}
+	return r.handleServiceGeneric(CRInstance, newValidatorServiceForCR(CRInstance))
+}
+
+type handlerServiceDefault struct {
+}
+func (h *handlerServiceDefault) handleServiceSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
+	return handleSkip()
+}
+
+func (r *ReconcilerPolkadot) handleServiceGeneric(CRInstance *polkadotv1alpha1.Polkadot, desiredService *corev1.Service) (bool, error) {
 
 	logger := log.WithValues("Service.Namespace", desiredService.Namespace, "Service.Name", desiredService.Name)
 
@@ -97,7 +97,7 @@ func (r *ReconcilePolkadot) handleServiceGeneric(CRInstance *polkadotv1alpha1.Po
 	return NotForcedRequeue, nil
 }
 
-func (r *ReconcilePolkadot) fetchService(service *corev1.Service) (*corev1.Service, error) {
+func (r *ReconcilerPolkadot) fetchService(service *corev1.Service) (*corev1.Service, error) {
 	found := &corev1.Service{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: service.Name, Namespace: service.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
@@ -106,7 +106,7 @@ func (r *ReconcilePolkadot) fetchService(service *corev1.Service) (*corev1.Servi
 	return found, err
 }
 
-func (r *ReconcilePolkadot) createService(service *corev1.Service, CRInstance *polkadotv1alpha1.Polkadot, logger logr.Logger) error {
+func (r *ReconcilerPolkadot) createService(service *corev1.Service, CRInstance *polkadotv1alpha1.Polkadot, logger logr.Logger) error {
 	err := r.setOwnership(CRInstance, service)
 	if err != nil {
 		logger.Error(err, "Error on setting the ownership...")
@@ -120,6 +120,6 @@ func areServicesDifferent(currentService *corev1.Service, desiredService *corev1
 	return result
 }
 
-func (r *ReconcilePolkadot) updateService(service *corev1.Service, logger logr.Logger) error {
+func (r *ReconcilerPolkadot) updateService(service *corev1.Service, logger logr.Logger) error {
 	return r.client.Update(context.TODO(), service)
 }

@@ -75,7 +75,7 @@ func (r *ReconcilerPolkadot) handleStatefulSetGeneric(CRInstance *polkadotv1alph
 	if foundResource == nil {
 		logger.Info("StatefulSet not found...")
 		logger.Info("Creating a new StatefulSet...")
-		err := r.createStatefulSet(desiredResource, CRInstance, logger)
+		err := r.createResource(desiredResource, CRInstance, logger)
 		if err != nil {
 			logger.Error(err, "Error on creating a new StatefulSet...")
 			return NotForcedRequeue, err

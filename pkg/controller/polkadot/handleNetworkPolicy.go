@@ -4,7 +4,6 @@ package polkadot
 
 import (
 	"context"
-	"github.com/go-logr/logr"
 	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -56,7 +55,7 @@ func (r *ReconcilerPolkadot) handleNetworkPolicyGeneric(CRInstance *polkadotv1al
 	if foundNP == nil {
 		logger.Info("Network Policy not found...")
 		logger.Info("Creating a new Network Policy...")
-		err := r.createNetworkPolicy(desiredNetworkPolicy, CRInstance, logger)
+		err := r.createResource(desiredNetworkPolicy, CRInstance, logger)
 		if err != nil {
 			logger.Error(err, "Error on creating a new Network Policy...")
 			return NotForcedRequeue, err
@@ -75,13 +74,4 @@ func (r *ReconcilerPolkadot) fetchNetworkPolicy(np *v1.NetworkPolicy) (*v1.Netwo
 		return nil, nil
 	}
 	return found, err
-}
-
-func (r *ReconcilerPolkadot) createNetworkPolicy(networkPolicy *v1.NetworkPolicy, CRInstance *polkadotv1alpha1.Polkadot, logger logr.Logger) error {
-	err := r.setOwnership(CRInstance, networkPolicy)
-	if err != nil {
-		logger.Error(err, "Error on setting the ownership...")
-		return err
-	}
-	return r.client.Create(context.TODO(), networkPolicy)
 }

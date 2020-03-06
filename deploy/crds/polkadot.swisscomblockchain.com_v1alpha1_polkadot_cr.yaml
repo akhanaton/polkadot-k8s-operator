@@ -15,11 +15,11 @@ spec:
     reservedValidatorID: "QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM"
     CPULimit: "1"
     memoryLimit: "1Gi"
-    storageClassName: "managed-premium" #["default","managed-premium"]
+    storageClassName: "default" #["default","managed-premium"]
   validator:
     clientName: "IronoaValidator"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
     reservedSentryID: "QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm"
     CPULimit: "1"
     memoryLimit: "1Gi"
-    storageClassName: "managed-premium" #["default","managed-premium"]
+    storageClassName: "default" #["default","managed-premium"]

@@ -7,7 +7,6 @@ import (
 	"github.com/go-logr/logr"
 	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -67,12 +66,13 @@ func (r *ReconcilerPolkadot) handleStatefulSetGeneric(CRInstance *polkadotv1alph
 
 	logger := log.WithValues("Deployment.Namespace", desiredResource.Namespace, "Deployment.Name", desiredResource.Name)
 
-	foundResource, err := r.fetchStatefulSet(desiredResource)
+	toBeFound := &appsv1.StatefulSet{}
+	isNotFound, err := r.fetchResource(toBeFound,types.NamespacedName{Name: desiredResource.Name, Namespace: desiredResource.Namespace})
 	if err != nil {
 		logger.Error(err, "Error on fetch the StatefulSet...")
 		return NotForcedRequeue, err
 	}
-	if foundResource == nil {
+	if isNotFound == true {
 		logger.Info("StatefulSet not found...")
 		logger.Info("Creating a new StatefulSet...")
 		err := r.createResource(desiredResource, CRInstance, logger)
@@ -83,6 +83,7 @@ func (r *ReconcilerPolkadot) handleStatefulSetGeneric(CRInstance *polkadotv1alph
 		logger.Info("Created the new StatefulSet")
 		return ForcedRequeue, nil
 	}
+	foundResource := toBeFound
 
 	if areStatefulSetDifferent(foundResource, desiredResource, logger) {
 		logger.Info("Updating the StatefulSet...")
@@ -95,15 +96,6 @@ func (r *ReconcilerPolkadot) handleStatefulSetGeneric(CRInstance *polkadotv1alph
 	}
 
 	return NotForcedRequeue, nil
-}
-
-func (r *ReconcilerPolkadot) fetchStatefulSet(obj *appsv1.StatefulSet) (*appsv1.StatefulSet, error) {
-	found := &appsv1.StatefulSet{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: obj.Name, Namespace: obj.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		return nil, nil
-	}
-	return found, err
 }
 
 func (r *ReconcilerPolkadot) updateStatefulSet(obj *appsv1.StatefulSet) error {

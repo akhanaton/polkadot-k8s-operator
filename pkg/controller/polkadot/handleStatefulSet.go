@@ -106,16 +106,6 @@ func (r *ReconcilerPolkadot) fetchStatefulSet(obj *appsv1.StatefulSet) (*appsv1.
 	return found, err
 }
 
-func (r *ReconcilerPolkadot) createStatefulSet(statefulSet *appsv1.StatefulSet, CRInstance *polkadotv1alpha1.Polkadot, logger logr.Logger) error {
-	err := r.setOwnership(CRInstance, statefulSet)
-	if err != nil {
-		logger.Error(err, "Error on setting the ownership...")
-		return err
-	}
-	err = r.client.Create(context.TODO(), statefulSet)
-	return err
-}
-
 func (r *ReconcilerPolkadot) updateStatefulSet(obj *appsv1.StatefulSet) error {
 	return r.client.Update(context.TODO(), obj)
 }

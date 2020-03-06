@@ -75,7 +75,7 @@ func (r *ReconcilerPolkadot) handleServiceGeneric(CRInstance *polkadotv1alpha1.P
 	if foundService == nil {
 		logger.Info("Service not found...")
 		logger.Info("Creating a new Service...")
-		err := r.createService(desiredService, CRInstance, logger)
+		err := r.createResource(desiredService, CRInstance, logger)
 		if err != nil {
 			logger.Error(err, "Error on creating a new Service...")
 			return NotForcedRequeue, err
@@ -104,15 +104,6 @@ func (r *ReconcilerPolkadot) fetchService(service *corev1.Service) (*corev1.Serv
 		return nil, nil
 	}
 	return found, err
-}
-
-func (r *ReconcilerPolkadot) createService(service *corev1.Service, CRInstance *polkadotv1alpha1.Polkadot, logger logr.Logger) error {
-	err := r.setOwnership(CRInstance, service)
-	if err != nil {
-		logger.Error(err, "Error on setting the ownership...")
-		return err
-	}
-	return r.client.Create(context.TODO(), service)
 }
 
 func areServicesDifferent(currentService *corev1.Service, desiredService *corev1.Service, logger logr.Logger) bool {

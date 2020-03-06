@@ -3,10 +3,8 @@
 package polkadot
 
 import (
-	"context"
 	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	v1 "k8s.io/api/networking/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -43,19 +41,20 @@ func (h *handlerNetworkPolicyDefault) handleNetworkPolicySpecific(r *ReconcilerP
 	return handleSkip()
 }
 
-func (r *ReconcilerPolkadot) handleNetworkPolicyGeneric(CRInstance *polkadotv1alpha1.Polkadot, desiredNetworkPolicy *v1.NetworkPolicy) (bool, error) {
+func (r *ReconcilerPolkadot) handleNetworkPolicyGeneric(CRInstance *polkadotv1alpha1.Polkadot, desiredResource *v1.NetworkPolicy) (bool, error) {
 
-	logger := log.WithValues("Service.Namespace", desiredNetworkPolicy.Namespace, "Service.Name", desiredNetworkPolicy.Name)
+	logger := log.WithValues("Service.Namespace", desiredResource.Namespace, "Service.Name", desiredResource.Name)
 
-	foundNP, err := r.fetchNetworkPolicy(desiredNetworkPolicy)
+	toBeFoundResource := &v1.NetworkPolicy{}
+	isNotFound,err := r.fetchResource(toBeFoundResource,types.NamespacedName{Name: desiredResource.Name, Namespace: desiredResource.Namespace})
 	if err != nil {
 		logger.Error(err, "Error on fetch the Network Policy...")
 		return NotForcedRequeue, err
 	}
-	if foundNP == nil {
+	if isNotFound == true {
 		logger.Info("Network Policy not found...")
 		logger.Info("Creating a new Network Policy...")
-		err := r.createResource(desiredNetworkPolicy, CRInstance, logger)
+		err := r.createResource(desiredResource, CRInstance, logger)
 		if err != nil {
 			logger.Error(err, "Error on creating a new Network Policy...")
 			return NotForcedRequeue, err
@@ -64,14 +63,7 @@ func (r *ReconcilerPolkadot) handleNetworkPolicyGeneric(CRInstance *polkadotv1al
 		return ForcedRequeue, nil
 	}
 
-	return NotForcedRequeue, nil
-}
+	//TODO add check differences
 
-func (r *ReconcilerPolkadot) fetchNetworkPolicy(np *v1.NetworkPolicy) (*v1.NetworkPolicy, error) {
-	found := &v1.NetworkPolicy{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: np.Name, Namespace: np.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		return nil, nil
-	}
-	return found, err
+	return NotForcedRequeue, nil
 }

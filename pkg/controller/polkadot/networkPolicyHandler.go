@@ -32,7 +32,7 @@ type IHandlerNetworkPolicy interface {
 type handlerNetworkPolicySentryAndValidator struct {
 }
 func (h *handlerNetworkPolicySentryAndValidator) handleNetworkPolicySpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
-	return r.handleNetworkPolicyGeneric(CRInstance,newValidatorNetworkPolicyForCR(CRInstance))
+	return r.handleNetworkPolicyGeneric(CRInstance, newNetworkPolicyValidator(CRInstance))
 }
 
 type handlerNetworkPolicyDefault struct {

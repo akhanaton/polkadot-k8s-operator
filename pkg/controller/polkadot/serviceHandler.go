@@ -36,23 +36,23 @@ type IHandlerService interface {
 type handlerServiceValidator struct {
 }
 func (h *handlerServiceValidator) handleServiceSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
-	return r.handleServiceGeneric(CRInstance,newValidatorServiceForCR(CRInstance))
+	return r.handleServiceGeneric(CRInstance, newServiceValidator(CRInstance))
 }
 
 type handlerServiceSentry struct {
 }
 func (h *handlerServiceSentry) handleServiceSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
-	return r.handleServiceGeneric(CRInstance,newSentryServiceForCR(CRInstance))
+	return r.handleServiceGeneric(CRInstance, newServiceSentry(CRInstance))
 }
 
 type handlerServiceSentryAndValidator struct {
 }
 func (h *handlerServiceSentryAndValidator) handleServiceSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error) {
-	isForcedRequeue, err := r.handleServiceGeneric(CRInstance, newSentryServiceForCR(CRInstance))
+	isForcedRequeue, err := r.handleServiceGeneric(CRInstance, newServiceSentry(CRInstance))
 	if isForcedRequeue == ForcedRequeue || err != nil {
 		return isForcedRequeue, err
 	}
-	return r.handleServiceGeneric(CRInstance, newValidatorServiceForCR(CRInstance))
+	return r.handleServiceGeneric(CRInstance, newServiceValidator(CRInstance))
 }
 
 type handlerServiceDefault struct {

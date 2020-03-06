@@ -4,8 +4,8 @@ then
 fi
 cd "$DIR" || exit
 
-source ./utils/wipeOperator.sh
 source ./utils/wipeCR.sh
+source ./utils/wipeOperator.sh
 
 pushd .. >/dev/null 2>&1
 kubectl delete -f deploy/crds/polkadot.swisscomblockchain.com_polkadots_crd.yaml

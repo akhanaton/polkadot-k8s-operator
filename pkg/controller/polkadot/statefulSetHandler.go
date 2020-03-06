@@ -36,23 +36,23 @@ type IHandlerStatefulSet interface {
 type handlerStatefulSetValidator struct {
 }
 func (h *handlerStatefulSetValidator) handleStatefulSetSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
-	return r.handleStatefulSetGeneric(CRInstance, newValidatorStatefulSetForCR(CRInstance))
+	return r.handleStatefulSetGeneric(CRInstance, newStatefulSetValidator(CRInstance))
 }
 
 type handlerStatefulSetSentry struct {
 }
 func (h *handlerStatefulSetSentry) handleStatefulSetSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
-	return r.handleStatefulSetGeneric(CRInstance, newSentryStatefulSetForCR(CRInstance))
+	return r.handleStatefulSetGeneric(CRInstance, newStatefulSetSentry(CRInstance))
 }
 
 type handlerStatefulSetSentryAndValidator struct {
 }
 func (h *handlerStatefulSetSentryAndValidator) handleStatefulSetSpecific(r *ReconcilerPolkadot, CRInstance *polkadotv1alpha1.Polkadot) (bool, error){
-	isForcedRequeue, err := r.handleStatefulSetGeneric(CRInstance, newSentryStatefulSetForCR(CRInstance))
+	isForcedRequeue, err := r.handleStatefulSetGeneric(CRInstance, newStatefulSetSentry(CRInstance))
 	if isForcedRequeue == ForcedRequeue || err != nil {
 		return isForcedRequeue, err
 	}
-	return r.handleStatefulSetGeneric(CRInstance, newValidatorStatefulSetForCR(CRInstance))
+	return r.handleStatefulSetGeneric(CRInstance, newStatefulSetValidator(CRInstance))
 }
 
 type handlerStatefulSetDefault struct {

@@ -18,6 +18,7 @@ const (
 	volumeMountPath        = "/data"
 	volumeName 			   = "polkadot-volume"
 	storageRequest         = "10Gi"
+	serviceName 		   = "polkadot"
 )
 
 func getAppLabels() map[string]string {

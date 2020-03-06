@@ -3,7 +3,6 @@
 package polkadot
 
 import (
-	"context"
 	"github.com/go-logr/logr"
 	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -87,7 +86,7 @@ func (r *ReconcilerPolkadot) handleStatefulSetGeneric(CRInstance *polkadotv1alph
 
 	if areStatefulSetDifferent(foundResource, desiredResource, logger) {
 		logger.Info("Updating the StatefulSet...")
-		err := r.updateStatefulSet(desiredResource)
+		err := r.updateResource(desiredResource)
 		if err != nil {
 			logger.Error(err, "Update StatefulSet Error...")
 			return NotForcedRequeue, err
@@ -96,10 +95,6 @@ func (r *ReconcilerPolkadot) handleStatefulSetGeneric(CRInstance *polkadotv1alph
 	}
 
 	return NotForcedRequeue, nil
-}
-
-func (r *ReconcilerPolkadot) updateStatefulSet(obj *appsv1.StatefulSet) error {
-	return r.client.Update(context.TODO(), obj)
 }
 
 func areStatefulSetDifferent(current *appsv1.StatefulSet, desired *appsv1.StatefulSet, logger logr.Logger) bool {

@@ -49,3 +49,7 @@ func (r *ReconcilerPolkadot) fetchResource(resource interface{}, key types.Names
 	}
 	return false,err
 }
+
+func (r *ReconcilerPolkadot) updateResource(resource interface{}) error {
+	return r.client.Update(context.TODO(), resource.(runtime.Object))
+}

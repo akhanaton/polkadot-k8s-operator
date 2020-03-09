@@ -88,12 +88,14 @@ spec:
     reservedValidatorID: "QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM"
     CPULimit: "0.5"
     memoryLimit: "512Mi"
+    storageClassName: "default" #["default","managed-premium"]
   validator:
     clientName: "IronoaValidator"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
     reservedSentryID: "QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm"
     CPULimit: "0.5"
     memoryLimit: "512Mi"
+    storageClassName: "default" #["default","managed-premium"]
 ```
 
 Example of a deployable deploy/operator.yaml, configured to work with my docker hub account (please change the image parameter).
@@ -353,7 +355,105 @@ Deployments on Kubernetes are by their nature ephemeral. Thus it is important to
 The current solution is using a Kubernetes Persistent Volume Claim with Azure Disk.
 Reference: https://docs.microsoft.com/en-us/azure/aks/azure-disks-dynamic-pv
 
-If you want to test it locally, minikube provides the "local" built in storage classes: just set "local" to the storageClassName parameter. 
+### How To Tutorial with Minikube
+
+If you want to test it locally, you first have to manually provide a class of few persistent volumes (at least two, one for each client you deploy) to minikube. Minikube will extract from this pool an available volume thanks to the Persistent Volume Claim mechanism.   
+Please note, in this example we decided to name the storageClassName as "local".
+
+```yaml
+# Copyright (c) 2020 Swisscom Blockchain AG
+# Licensed under MIT License
+# persistentVolume.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-volume0
+  labels:
+    type: local
+spec:
+  storageClassName: local
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/vda1/data0"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-volume1
+  labels:
+    type: local
+spec:
+  storageClassName: local
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/vda1/data1"
+```
+
+The fields "hostPath -> path" describe where the folder will be mounted inside minikube. We have to create that folders and grant some permission first:
+
+```sh
+# ssh into Minikube
+$ minikube ssh
+                         _             _
+            _         _ ( )           ( )
+  ___ ___  (_)  ___  (_)| |/')  _   _ | |_      __
+/' _ ` _ `\| |/' _ `\| || , <  ( ) ( )| '_`\  /'__`\
+| ( ) ( ) || || ( ) || || |\`\ | (_) || |_) )(  ___/
+(_) (_) (_)(_)(_) (_)(_)(_) (_)`\___/'(_,__/'`\____)
+
+$ cd /mnt/vda1/
+$ sudo mkdir data0
+$ sudo mkdir data1
+$ sudo chmod 0777 data0
+$ sudo chmod 0777 data1
+# Done it! now exit from the ssh 
+```
+
+Now we can create the two Persistent Volume we defined previously:
+
+```sh
+$ kubectl apply -f persistentVolume.yaml
+persistentvolume/pv-volume0 created
+persistentvolume/pv-volume1 created
+```
+
+Finally, change the storageClassName parameter in the CustomResource definition, for example:
+
+```yaml
+# Copyright (c) 2020 Swisscom Blockchain AG
+# Licensed under MIT License
+apiVersion: polkadot.swisscomblockchain.com/v1alpha1
+kind: Polkadot
+metadata:
+  name: polkadot-cr
+spec:
+  clientVersion: latest
+  kind: "SentryAndValidator"
+  isNetworkPolicyActive: "true"
+  sentry:
+    replicas: 1
+    clientName: "IronoaSentry"
+    nodeKey: "0000000000000000000000000000000000000000000000000000000000000013" # Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
+    reservedValidatorID: "QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM"
+    CPULimit: "0.5"
+    memoryLimit: "512Mi"
+    storageClassName: "local"
+  validator:
+    clientName: "IronoaValidator"
+    nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
+    reservedSentryID: "QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm"
+    CPULimit: "0.5"
+    memoryLimit: "512Mi"
+    storageClassName: "local"
+```
+
+You can now deploy the operator as usual, also with the init.sh script.
 
 ## About Kubernetes
 

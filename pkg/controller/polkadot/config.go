@@ -4,8 +4,11 @@ package polkadot
 
 const (
 	imageName              = "parity/polkadot"
+	imageNameMetrics 	   = "ironoa/polkadot-metrics:v0.0.1" //define your favourite
 	serviceSentryName      = "sentry-service"
 	serviceValidatorName   = "validator-service"
+	metricsPort			   = 8000
+	metricsPortName		   = "http-metrics"
 	P2PPort                = 30333
 	P2PPortName            = "p2p"
 	RPCPort                = 9933
@@ -20,6 +23,7 @@ const (
 	storageRequest         = "10Gi"
 	serviceName 		   = "polkadot"
 )
+
 
 func getAppLabels() map[string]string {
 	labels := map[string]string{"app": "polkadot"}

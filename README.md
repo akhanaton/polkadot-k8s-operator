@@ -455,6 +455,152 @@ spec:
 
 You can now deploy the operator as usual, also with the init.sh script.
 
+## Metrics Support
+
+The solution uses the Sidecar Pattern concept: a metrics-exporter container is running aside each Polkadot client container in the same Pod.
+
+The metrics exporter is a python script provided directly by parity for substrate and Polkadot use cases: https://github.com/paritytech/dotexporter
+
+The metrics are provided in the Prometheus format.
+
+### Default configuration
+
+* Metrics functionality is active
+* Each Pod Service provide access to the metrics:
+    * at port 8000
+    * at /metrics endpoint
+    * "client-service-ip:8000/metrics"
+    
+Please change the IMAGE_METRICS parameter in the scripts/utils/buildAndDeployMetrics.sh to your favourite Container Registry account.  
+Please change the imageNameMetrics parameter in the pkg/controller/polkadot/config.go accordingly.
+
+### How to access to the metrics: Example in Minikube
+
+```sh
+# accordingly to the previuous tutorials, deploy the operator via the init script
+$ ./init.sh
+serviceaccount/polkadot-operator created
+role.rbac.authorization.k8s.io/polkadot-operator created
+rolebinding.rbac.authorization.k8s.io/polkadot-operator created
+customresourcedefinition.apiextensions.k8s.io/polkadots.polkadot.swisscomblockchain.com created
+Sending build context to Docker daemon  46.59kB
+Step 1/6 : FROM python:3
+ ---> 0a3a95c81a2b
+Step 2/6 : WORKDIR /usr/src/app
+ ---> Using cache
+ ---> 6afd46650a00
+Step 3/6 : COPY requirements.txt ./
+ ---> Using cache
+ ---> d2966df3ab19
+Step 4/6 : RUN pip install --no-cache-dir -r requirements.txt
+ ---> Using cache
+ ---> bb726a16a342
+Step 5/6 : COPY . .
+ ---> Using cache
+ ---> 0c9e8596cc30
+Step 6/6 : CMD [ "python", "./dotexporter.py" ]
+ ---> Using cache
+ ---> 86b334c18d7c
+Successfully built 86b334c18d7c
+Successfully tagged ironoa/polkadot-metrics:v0.0.1
+The push refers to repository [docker.io/ironoa/polkadot-metrics]
+16e8e95276ca: Layer already exists
+79895f0d0be2: Layer already exists
+d518e67ac3b1: Layer already exists
+6446e78ce501: Layer already exists
+00947a3aa859: Layer already exists
+7290ddeeb6e8: Layer already exists
+d3bfe2faf397: Layer already exists
+cecea5b3282e: Layer already exists
+9437609235f0: Layer already exists
+bee1c15bf7e8: Layer already exists
+423d63eb4a27: Layer already exists
+7f9bf938b053: Layer already exists
+f2b4f0674ba3: Layer already exists
+v0.0.1: digest: sha256:fa5bf0b842d70996dab707a4fc1a6eebbfc61df01b7cbfeb9a594eb69a173f1d size: 3051
+INFO[0004] Building OCI image ironoa/customresource-operator:v0.0.8
+Sending build context to Docker daemon  58.03MB
+Step 1/7 : FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
+ ---> d17cc1f9d041
+Step 2/7 : ENV OPERATOR=/usr/local/bin/polkadot-operator     USER_UID=1001     USER_NAME=polkadot-operator
+ ---> Using cache
+ ---> 7e017ac07d9a
+Step 3/7 : COPY build/_output/bin/polkadot-operator ${OPERATOR}
+ ---> 27824852294b
+Step 4/7 : COPY build/bin /usr/local/bin
+ ---> 9c402e3c4e3a
+Step 5/7 : RUN  /usr/local/bin/user_setup
+ ---> Running in 83b229aa3959
++ echo 'polkadot-operator:x:1001:0:polkadot-operator user:/root:/sbin/nologin'
++ mkdir -p /root
++ chown 1001:0 /root
++ chmod ug+rwx /root
++ rm /usr/local/bin/user_setup
+Removing intermediate container 83b229aa3959
+ ---> 867af0f89f07
+Step 6/7 : ENTRYPOINT ["/usr/local/bin/entrypoint"]
+ ---> Running in a31e1d3c6fe9
+Removing intermediate container a31e1d3c6fe9
+ ---> c9584177aefe
+Step 7/7 : USER ${USER_UID}
+ ---> Running in 4c65e80f42cf
+Removing intermediate container 4c65e80f42cf
+ ---> 990d538921ab
+Successfully built 990d538921ab
+Successfully tagged ironoa/customresource-operator:v0.0.8
+INFO[0010] Operator build complete.
+The push refers to repository [docker.io/ironoa/customresource-operator]
+265a1cc36a93: Pushed
+926eb1253b1e: Pushed
+352257d20965: Pushed
+27cd2023d60a: Layer already exists
+4b52dfd1f9d9: Layer already exists
+v0.0.8: digest: sha256:3c21d9ac7cf5d0cf1e0ecf88d0a69d3929eb5754912733fe560090f8fc582354 size: 1363
+deployment.apps/polkadot-operator created
+polkadot.polkadot.swisscomblockchain.com/polkadot-cr created
+
+# check the status of the deployment
+$ kubectl get pods
+polkadot-operator-78b5fc54f-v9d6d   1/1     Running   0          33s
+sentry-sset-0                       2/2     Running   0          29s
+validator-sset-0                    2/2     Running   0          29s
+
+# retrieve the services and check the IP addresses of the polkadot clients
+$ kubectl get services
+kubernetes                  ClusterIP   10.96.0.1        <none>        443/TCP                                                        77m
+polkadot-operator-metrics   ClusterIP   10.100.143.145   <none>        8383/TCP,8686/TCP                                              87s
+sentry-service              NodePort    10.96.76.21      <none>        30333:31945/TCP,9933:30506/TCP,9944:30586/TCP,8000:31836/TCP   87s
+validator-service           ClusterIP   10.101.249.247   <none>        30333/TCP,9933/TCP,9944/TCP,8000/TCP                           87s
+
+# access inside the minikube cluster
+$ minikube ssh
+                         _             _
+            _         _ ( )           ( )
+  ___ ___  (_)  ___  (_)| |/')  _   _ | |_      __
+/' _ ` _ `\| |/' _ `\| || , <  ( ) ( )| '_`\  /'__`\
+| ( ) ( ) || || ( ) || || |\`\ | (_) || |_) )(  ___/
+(_) (_) (_)(_)(_) (_)(_)(_) (_)`\___/'(_,__/'`\____)
+
+# test the metrics enpoints
+$ curl 10.96.76.21:8000/metrics
+dot_chain_block_number{name="parity-polkadot",version="0.7.22",chain="Kusama CC3",block="finalized"} 2560
+dot_chain_block_number{name="parity-polkadot",version="0.7.22",chain="Kusama CC3",block="head"} 3061
+dot_peer_count{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 9
+dot_shouldHavePeers{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1
+dot_isSyncing{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1
+dot_specVersion{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1020
+dot_rpc_healthy{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1
+
+$ curl 10.101.249.247:8000/metrics
+dot_chain_block_number{name="parity-polkadot",version="0.7.22",chain="Kusama CC3",block="finalized"} 1536
+dot_chain_block_number{name="parity-polkadot",version="0.7.22",chain="Kusama CC3",block="head"} 1996
+dot_peer_count{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1
+dot_shouldHavePeers{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1
+dot_isSyncing{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 0
+dot_specVersion{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1020
+dot_rpc_healthy{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1
+```
+
 ## About Kubernetes
 
 Kubernetes (K8s) is an open-source system for automating deployment, scaling, and management of containerized applications.  

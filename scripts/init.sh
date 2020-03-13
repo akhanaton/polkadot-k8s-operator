@@ -11,5 +11,6 @@ kubectl create -f deploy/role_binding.yaml
 kubectl create -f deploy/crds/polkadot.swisscomblockchain.com_polkadots_crd.yaml
 popd >/dev/null 2>&1 || exit
 
+source ./utils/buildAndDeployMetrics.sh
 source ./utils/compileAndDeployOperator.sh
 source ./utils/deployCR.sh

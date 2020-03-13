@@ -29,7 +29,6 @@ func getService(name string, namespace string, labels  map[string]string, servic
 			Name:      name,
 			Namespace: namespace,
 			Labels:    labels,
-			Annotations: map[string]string{"prometheus.io/scrape": "true"},
 		},
 		Spec: corev1.ServiceSpec{
 			Type:     serviceType,

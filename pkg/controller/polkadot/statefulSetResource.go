@@ -27,7 +27,7 @@ func getCommands(nodeKey,clientName string) []string{
 		"--unsafe-rpc-external",
 		"--unsafe-ws-external",
 		"--rpc-cors=all",
-		"--no-telemetry",
+		//"--no-telemetry",
 	}
 }
 
@@ -96,15 +96,24 @@ func getStatefulSet(name string, namespace string, labels map[string]string, rep
 				Spec: corev1.PodSpec{
 					SecurityContext: getPodSecurityContext(),
 					InitContainers: []corev1.Container{ *getVolumePermissionInitContainer() },
-					Containers: []corev1.Container{{
-						Name:  serviceName,
-						Image: imageName + ":" + version,
-						VolumeMounts: getVolumeMounts(),
-						Command: commands,
-						Ports: getContainerPorts(),
-						LivenessProbe: getHealthProbe(),
-						Resources: getResourceLimits(CPULimit,memoryLimit),
-					}},
+					Containers: []corev1.Container{
+						{
+						Name:           serviceName,
+						Image:          imageName + ":" + version,
+						VolumeMounts:   getVolumeMounts(),
+						Command:        commands,
+						Ports:          getContainerPortsClient(),
+						LivenessProbe:  getHealthProbeClient(),
+						ReadinessProbe: getHealthProbeClient(),
+						Resources:      getResourceLimits(CPULimit,memoryLimit),
+					},
+					{
+						Name:          "metrics-exporter",
+						Image:         imageNameMetrics,
+						Ports:         getContainerPortsMetrics(),
+						LivenessProbe: getHealthProbeMetrics(),
+					},
+					},
 				},
 			},
 		},
@@ -166,12 +175,25 @@ func getVolumeMounts() []corev1.VolumeMount{
 	}}
 }
 
-func getHealthProbe() *corev1.Probe{
+func getHealthProbeClient() *corev1.Probe{
 	return &corev1.Probe{
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path: "/health",
 				Port: intstr.IntOrString{Type: intstr.String, StrVal: RPCPortName},
+			},
+		},
+		InitialDelaySeconds: 10,
+		PeriodSeconds:       10,
+	}
+}
+
+func getHealthProbeMetrics() *corev1.Probe{
+	return &corev1.Probe{
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path: "/metrics",
+				Port: intstr.IntOrString{Type: intstr.String, StrVal: metricsPortName},
 			},
 		},
 		InitialDelaySeconds: 10,
@@ -188,7 +210,7 @@ func getResourceLimits(cpu,memory string) corev1.ResourceRequirements{
 	}
 }
 
-func getContainerPorts() []corev1.ContainerPort{
+func getContainerPortsClient() []corev1.ContainerPort{
 	return []corev1.ContainerPort{
 		{
 			ContainerPort: P2PPort,
@@ -201,6 +223,15 @@ func getContainerPorts() []corev1.ContainerPort{
 		{
 			ContainerPort: WSPort,
 			Name:          WSPortName,
+		},
+	}
+}
+
+func getContainerPortsMetrics() []corev1.ContainerPort{
+	return []corev1.ContainerPort{
+		{
+			ContainerPort: metricsPort,
+			Name:          metricsPortName,
 		},
 	}
 }

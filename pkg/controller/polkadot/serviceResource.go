@@ -58,5 +58,11 @@ func getServicePorts() []corev1.ServicePort{
 			TargetPort: intstr.FromInt(WSPort),
 			Protocol:   "TCP",
 		},
+		{
+			Name:       metricsPortName,
+			Port:       metricsPort,
+			TargetPort: intstr.FromInt(metricsPort),
+			Protocol:   "TCP",
+		},
 	}
 }

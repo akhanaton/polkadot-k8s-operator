@@ -33,6 +33,10 @@ spec:
           properties:
             clientVersion:
               type: string
+            isDataPersistenceActive:
+              type: string
+            isMetricsSupportActive:
+              type: string
             isNetworkPolicyActive:
               type: string
             kind:
@@ -58,7 +62,6 @@ spec:
               - clientName
               - nodeKey
               - replicas
-              - storageClassName
               type: object
             validator:
               properties:
@@ -77,7 +80,6 @@ spec:
               required:
               - clientName
               - nodeKey
-              - storageClassName
               type: object
           required:
           - clientVersion

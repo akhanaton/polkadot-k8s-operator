@@ -12,12 +12,11 @@ import (
 	"strconv"
 )
 
-func getCommands(nodeKey,clientName string) []string{
-	return []string{
+func getCommands(nodeKey,clientName, isDataPersistenceActive string) []string{
+	c := []string{
 		"polkadot",
 		"--node-key", nodeKey,
 		"--name", clientName,
-		"-d=" + volumeMountPath,
 		"--port",
 		strconv.Itoa(P2PPort),
 		"--rpc-port",
@@ -29,6 +28,24 @@ func getCommands(nodeKey,clientName string) []string{
 		"--rpc-cors=all",
 		//"--no-telemetry",
 	}
+	if isDataPersistenceActive == "true" {
+		c = append(c,"-d=" + volumeMountPath)
+	}
+	return c
+}
+
+type Parameters struct{
+	name string
+	namespace string
+	labels map[string]string
+	replicas int32
+	storageClassName string
+	version string
+	commands []string
+	CPULimit string
+	memoryLimit string
+	isDataPersistenceActive string
+	isMetricsSupportActive string
 }
 
 func newStatefulSetSentry(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.StatefulSet {
@@ -39,17 +56,33 @@ func newStatefulSetSentry(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Statefu
 	CPULimit := CRInstance.Spec.Sentry.CPULimit
 	memoryLimit := CRInstance.Spec.Sentry.MemoryLimit
 	storageClassName := CRInstance.Spec.Sentry.StorageClassName
+	isDataPersistenceActive := CRInstance.Spec.IsDataPersistenceActive
+	isMetricsSupportActive := CRInstance.Spec.IsMetricsSupportActive
 
 	labels := getSentrylabels()
 
-	commands := getCommands(nodeKey,clientName)
+	commands := getCommands(nodeKey,clientName,isDataPersistenceActive)
 	commands = append(commands,"--sentry")
 	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
 		reservedValidatorID := CRInstance.Spec.Sentry.ReservedValidatorID
 		commands = append(commands, "--reserved-nodes", "/dns4/"+serviceValidatorName+"/tcp/30333/p2p/"+reservedValidatorID)
 	}
 
-	return getStatefulSet(sentrySSName,CRInstance.Namespace,labels,replicas,storageClassName,version,commands,CPULimit,memoryLimit)
+	p := Parameters{
+		name:                    sentrySSName,
+		namespace:               CRInstance.Namespace,
+		labels:                  labels,
+		replicas:                replicas,
+		storageClassName:        storageClassName,
+		version:                 version,
+		commands:                commands,
+		CPULimit:                CPULimit,
+		memoryLimit:             memoryLimit,
+		isDataPersistenceActive: isDataPersistenceActive,
+		isMetricsSupportActive: isMetricsSupportActive,
+	}
+
+	return getStatefulSet(p)
 }
 
 func newStatefulSetValidator(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.StatefulSet {
@@ -60,10 +93,12 @@ func newStatefulSetValidator(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Stat
 	CPULimit := CRInstance.Spec.Validator.CPULimit
 	memoryLimit := CRInstance.Spec.Validator.MemoryLimit
 	storageClassName := CRInstance.Spec.Validator.StorageClassName
+	isDataPersistenceActive := CRInstance.Spec.IsDataPersistenceActive
+	isMetricsSupportActive := CRInstance.Spec.IsMetricsSupportActive
 
 	labels := getValidatorLabels()
 
-	commands := getCommands(nodeKey,clientName)
+	commands := getCommands(nodeKey,clientName,isDataPersistenceActive)
 	commands = append(commands,"--validator")
 	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
 		reservedSentryID := CRInstance.Spec.Validator.ReservedSentryID
@@ -72,51 +107,92 @@ func newStatefulSetValidator(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Stat
 			"--reserved-nodes", "/dns4/"+serviceSentryName+"/tcp/30333/p2p/"+reservedSentryID)
 	}
 
-	return getStatefulSet(validatorSSName,CRInstance.Namespace,labels,replicas,storageClassName,version,commands,CPULimit,memoryLimit)
+	p := Parameters{
+		name:                    validatorSSName,
+		namespace:               CRInstance.Namespace,
+		labels:                  labels,
+		replicas:                replicas,
+		storageClassName:        storageClassName,
+		version:                 version,
+		commands:                commands,
+		CPULimit:                CPULimit,
+		memoryLimit:             memoryLimit,
+		isDataPersistenceActive: isDataPersistenceActive,
+		isMetricsSupportActive: isMetricsSupportActive,
+	}
+
+	return getStatefulSet(p)
 }
 
-func getStatefulSet(name string, namespace string, labels map[string]string, replicas int32, storageClassName string, version string, commands []string, CPULimit,memoryLimit string) *appsv1.StatefulSet{
+func getStatefulSet(p Parameters) *appsv1.StatefulSet{
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			Labels:    getCopyLabelsWithVersion(labels, version),
+			Name:      p.name,
+			Namespace: p.namespace,
+			Labels:    getCopyLabelsWithVersion(p.labels, p.version),
 		},
-		Spec: appsv1.StatefulSetSpec{
-			Replicas: &replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
-			},
-			ServiceName: serviceName,
-			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{ *getVolumeClaimTemplate(storageClassName) },
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: corev1.PodSpec{
-					SecurityContext: getPodSecurityContext(),
-					InitContainers: []corev1.Container{ *getVolumePermissionInitContainer() },
-					Containers: []corev1.Container{
-						{
-						Name:           serviceName,
-						Image:          imageName + ":" + version,
-						VolumeMounts:   getVolumeMounts(),
-						Command:        commands,
-						Ports:          getContainerPortsClient(),
-						LivenessProbe:  getHealthProbeClient(),
-						ReadinessProbe: getHealthProbeClient(),
-						Resources:      getResourceLimits(CPULimit,memoryLimit),
-					},
-					{
-						Name:          "metrics-exporter",
-						Image:         imageNameMetrics,
-						Ports:         getContainerPortsMetrics(),
-						LivenessProbe: getHealthProbeMetrics(),
-					},
-					},
-				},
-			},
+		Spec: getStatefulSetSpec(p),
+	}
+}
+
+func getStatefulSetSpec(p Parameters) appsv1.StatefulSetSpec{
+	sSpec := appsv1.StatefulSetSpec{
+		Replicas: &p.replicas,
+		Selector: &metav1.LabelSelector{
+			MatchLabels: p.labels,
 		},
+		ServiceName: serviceName,
+		Template: corev1.PodTemplateSpec{
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: p.labels,
+			},
+			Spec: getPodSpec(p),
+		},
+	}
+	if p.isDataPersistenceActive == "true"{
+		sSpec.VolumeClaimTemplates = []corev1.PersistentVolumeClaim{ *getVolumeClaimTemplate(p.storageClassName) }
+	}
+	return sSpec
+}
+
+func getPodSpec(p Parameters) corev1.PodSpec{
+	spec := corev1.PodSpec{
+		SecurityContext: getPodSecurityContext(),
+		Containers: []corev1.Container{
+			getContainerClient(p),
+		},
+	}
+	if p.isDataPersistenceActive == "true"{
+		spec.InitContainers = []corev1.Container{ *getVolumePermissionInitContainer() }
+	}
+	if p.isMetricsSupportActive == "true"{
+		spec.Containers = append(spec.Containers, getContainerMetrics())
+	}
+	return spec
+}
+
+func getContainerClient(p Parameters) corev1.Container{
+	container:=corev1.Container{
+			Name:           serviceName,
+			Image:          imageName + ":" + p.version,
+			Command:        p.commands,
+			Ports:          getContainerPortsClient(),
+			LivenessProbe:  getHealthProbeClient(),
+			ReadinessProbe: getHealthProbeClient(),
+			Resources:      getResourceLimits(p.CPULimit,p.memoryLimit),
+		}
+		if p.isDataPersistenceActive == "true"{
+			container.VolumeMounts=getVolumeMounts()
+		}
+		return container
+}
+
+func getContainerMetrics() corev1.Container{
+	return corev1.Container {
+		Name:          "metrics-exporter",
+		Image:         imageNameMetrics,
+		Ports:         getContainerPortsMetrics(),
+		LivenessProbe: getHealthProbeMetrics(),
 	}
 }
 

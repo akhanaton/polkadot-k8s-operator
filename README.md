@@ -601,6 +601,113 @@ dot_specVersion{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1020
 dot_rpc_healthy{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1
 ```
 
+## E2E Testing
+
+End-to-end (e2e) testing is automated testing written as Go test.   
+All the e2e tests are located in test/e2e.  
+The Operator SDK includes a testing framework to make writing tests simpler and quicker by removing boilerplate code and providing common test utilities.  
+Reference: https://github.com/operator-framework/operator-sdk/blob/master/doc/test-framework/writing-e2e-tests.md
+
+### Build and run test
+
+Requirements:
+
+* a running k8s cluster (e.g. Minikube)
+
+You can run the tests in your local environment with the following command:
+```sh
+$ operator-sdk test local ./test/e2e --go-test-flags "-v"
+INFO[0000] Testing operator locally.                    
+=== RUN   TestPolkadot
+    TestPolkadot: client.go:62: resource type ServiceAccount with namespace/name (osdk-e2e-6112de68-81ad-43f4-85d9-a38e3834381c/polkadot-operator) created
+    TestPolkadot: client.go:62: resource type Role with namespace/name (osdk-e2e-6112de68-81ad-43f4-85d9-a38e3834381c/polkadot-operator) created
+    TestPolkadot: client.go:62: resource type RoleBinding with namespace/name (osdk-e2e-6112de68-81ad-43f4-85d9-a38e3834381c/polkadot-operator) created
+    TestPolkadot: client.go:62: resource type Deployment with namespace/name (osdk-e2e-6112de68-81ad-43f4-85d9-a38e3834381c/polkadot-operator) created
+    TestPolkadot: wait_util.go:70: Deployment available (1/1)
+=== RUN   TestPolkadot/TestPolkadotSentry
+    TestPolkadot: client.go:62: resource type  with namespace/name (osdk-e2e-6112de68-81ad-43f4-85d9-a38e3834381c/example-polkadot) created
+=== RUN   TestPolkadot/TestPolkadotSentry/TestStatefulSetCreation
+    TestPolkadot/TestPolkadotSentry/TestStatefulSetCreation: waitUtils.go:26: Waiting for full availability of sentry-sset stateful set (0/1)
+    TestPolkadot/TestPolkadotSentry/TestStatefulSetCreation: waitUtils.go:26: Waiting for full availability of sentry-sset stateful set (0/1)
+    TestPolkadot/TestPolkadotSentry/TestStatefulSetCreation: waitUtils.go:32: Stateful Set available (1/1)
+=== RUN   TestPolkadot/TestPolkadotSentry/TestServiceCreation
+    TestPolkadot/TestPolkadotSentry/TestServiceCreation: waitUtils.go:74: Service available
+=== RUN   TestPolkadot/TestPolkadotSentry/TestStatefulSetDeletion
+    TestPolkadot/TestPolkadotSentry/TestStatefulSetDeletion: waitUtils.go:55: Stateful Set deleted
+=== RUN   TestPolkadot/TestPolkadotSentry/TestServiceDeletion
+    TestPolkadot/TestPolkadotSentry/TestServiceDeletion: waitUtils.go:93: Service deleted
+=== RUN   TestPolkadot/TestPolkadotValidator
+    TestPolkadot: client.go:62: resource type  with namespace/name (osdk-e2e-6112de68-81ad-43f4-85d9-a38e3834381c/example-polkadot) created
+=== RUN   TestPolkadot/TestPolkadotValidator/TestStatefulSetCreation
+    TestPolkadot/TestPolkadotValidator/TestStatefulSetCreation: waitUtils.go:26: Waiting for full availability of validator-sset stateful set (0/1)
+    TestPolkadot/TestPolkadotValidator/TestStatefulSetCreation: waitUtils.go:26: Waiting for full availability of validator-sset stateful set (0/1)
+    TestPolkadot/TestPolkadotValidator/TestStatefulSetCreation: waitUtils.go:32: Stateful Set available (1/1)
+=== RUN   TestPolkadot/TestPolkadotValidator/TestServiceCreation
+    TestPolkadot/TestPolkadotValidator/TestServiceCreation: waitUtils.go:74: Service available
+=== RUN   TestPolkadot/TestPolkadotValidator/TestStatefulSetDeletion
+    TestPolkadot/TestPolkadotValidator/TestStatefulSetDeletion: waitUtils.go:55: Stateful Set deleted
+=== RUN   TestPolkadot/TestPolkadotValidator/TestServiceDeletion
+    TestPolkadot/TestPolkadotValidator/TestServiceDeletion: waitUtils.go:93: Service deleted
+=== RUN   TestPolkadot/TestPolkadotSentryAndValidator
+    TestPolkadot: client.go:62: resource type  with namespace/name (osdk-e2e-6112de68-81ad-43f4-85d9-a38e3834381c/example-polkadot) created
+=== RUN   TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetCreationSentry
+    TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetCreationSentry: waitUtils.go:26: Waiting for full availability of sentry-sset stateful set (0/1)
+    TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetCreationSentry: waitUtils.go:26: Waiting for full availability of sentry-sset stateful set (0/1)
+    TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetCreationSentry: waitUtils.go:26: Waiting for full availability of sentry-sset stateful set (0/1)
+    TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetCreationSentry: waitUtils.go:26: Waiting for full availability of sentry-sset stateful set (0/1)
+    TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetCreationSentry: waitUtils.go:32: Stateful Set available (1/1)
+=== RUN   TestPolkadot/TestPolkadotSentryAndValidator/TestServiceCreationSentry
+    TestPolkadot/TestPolkadotSentryAndValidator/TestServiceCreationSentry: waitUtils.go:74: Service available
+=== RUN   TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetCreationValidator
+    TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetCreationValidator: waitUtils.go:32: Stateful Set available (1/1)
+=== RUN   TestPolkadot/TestPolkadotSentryAndValidator/TestServiceCreationValidator
+    TestPolkadot/TestPolkadotSentryAndValidator/TestServiceCreationValidator: waitUtils.go:74: Service available
+=== RUN   TestPolkadot/TestPolkadotSentryAndValidator/TestNetworkPolicyCreation
+    TestPolkadot/TestPolkadotSentryAndValidator/TestNetworkPolicyCreation: waitUtils.go:112: Network policy available
+=== RUN   TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetDeletionSentry
+    TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetDeletionSentry: waitUtils.go:55: Stateful Set deleted
+=== RUN   TestPolkadot/TestPolkadotSentryAndValidator/TestServiceDeletionSentry
+    TestPolkadot/TestPolkadotSentryAndValidator/TestServiceDeletionSentry: waitUtils.go:93: Service deleted
+=== RUN   TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetDeletionValidator
+    TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetDeletionValidator: waitUtils.go:55: Stateful Set deleted
+=== RUN   TestPolkadot/TestPolkadotSentryAndValidator/TestServiceDeletionValidator
+    TestPolkadot/TestPolkadotSentryAndValidator/TestServiceDeletionValidator: waitUtils.go:93: Service deleted
+=== RUN   TestPolkadot/TestPolkadotSentryAndValidator/TestNetworkPolicyDeletion
+    TestPolkadot/TestPolkadotSentryAndValidator/TestNetworkPolicyDeletion: waitUtils.go:131: Network policy deleted
+    TestPolkadot: client.go:82: resource type  with namespace/name (osdk-e2e-6112de68-81ad-43f4-85d9-a38e3834381c/example-polkadot) successfully deleted
+    TestPolkadot: client.go:82: resource type  with namespace/name (osdk-e2e-6112de68-81ad-43f4-85d9-a38e3834381c/example-polkadot) successfully deleted
+    TestPolkadot: client.go:82: resource type  with namespace/name (osdk-e2e-6112de68-81ad-43f4-85d9-a38e3834381c/example-polkadot) successfully deleted
+    TestPolkadot: client.go:82: resource type Deployment with namespace/name (osdk-e2e-6112de68-81ad-43f4-85d9-a38e3834381c/polkadot-operator) successfully deleted
+    TestPolkadot: client.go:82: resource type RoleBinding with namespace/name (osdk-e2e-6112de68-81ad-43f4-85d9-a38e3834381c/polkadot-operator) successfully deleted
+    TestPolkadot: client.go:82: resource type Role with namespace/name (osdk-e2e-6112de68-81ad-43f4-85d9-a38e3834381c/polkadot-operator) successfully deleted
+    TestPolkadot: client.go:82: resource type ServiceAccount with namespace/name (osdk-e2e-6112de68-81ad-43f4-85d9-a38e3834381c/polkadot-operator) successfully deleted
+--- PASS: TestPolkadot (136.37s)
+    --- PASS: TestPolkadot/TestPolkadotSentry (30.05s)
+        --- PASS: TestPolkadot/TestPolkadotSentry/TestStatefulSetCreation (15.01s)
+        --- PASS: TestPolkadot/TestPolkadotSentry/TestServiceCreation (5.01s)
+        --- PASS: TestPolkadot/TestPolkadotSentry/TestStatefulSetDeletion (5.01s)
+        --- PASS: TestPolkadot/TestPolkadotSentry/TestServiceDeletion (5.01s)
+    --- PASS: TestPolkadot/TestPolkadotValidator (30.05s)
+        --- PASS: TestPolkadot/TestPolkadotValidator/TestStatefulSetCreation (15.01s)
+        --- PASS: TestPolkadot/TestPolkadotValidator/TestServiceCreation (5.01s)
+        --- PASS: TestPolkadot/TestPolkadotValidator/TestStatefulSetDeletion (5.01s)
+        --- PASS: TestPolkadot/TestPolkadotValidator/TestServiceDeletion (5.01s)
+    --- PASS: TestPolkadot/TestPolkadotSentryAndValidator (70.09s)
+        --- PASS: TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetCreationSentry (25.01s)
+        --- PASS: TestPolkadot/TestPolkadotSentryAndValidator/TestServiceCreationSentry (5.01s)
+        --- PASS: TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetCreationValidator (5.01s)
+        --- PASS: TestPolkadot/TestPolkadotSentryAndValidator/TestServiceCreationValidator (5.01s)
+        --- PASS: TestPolkadot/TestPolkadotSentryAndValidator/TestNetworkPolicyCreation (5.01s)
+        --- PASS: TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetDeletionSentry (5.00s)
+        --- PASS: TestPolkadot/TestPolkadotSentryAndValidator/TestServiceDeletionSentry (5.01s)
+        --- PASS: TestPolkadot/TestPolkadotSentryAndValidator/TestStatefulSetDeletionValidator (5.01s)
+        --- PASS: TestPolkadot/TestPolkadotSentryAndValidator/TestServiceDeletionValidator (5.01s)
+        --- PASS: TestPolkadot/TestPolkadotSentryAndValidator/TestNetworkPolicyDeletion (5.01s)
+PASS
+ok      github.com/swisscom-blockchain/polkadot-k8s-operator/test/e2e   136.908s
+?       github.com/swisscom-blockchain/polkadot-k8s-operator/test/e2e/utils     [no test files]
+```
+
 ## About Kubernetes
 
 Kubernetes (K8s) is an open-source system for automating deployment, scaling, and management of containerized applications.  
@@ -632,3 +739,5 @@ The deployable resources, the CR and the CRD, are located under deploy/crds/
 Other deployable resources such as the controller operator and the service account are located under deploy/  
 
 The scripts to easily compile and deploy the operator are located under scripts/
+
+The end-to-end tests are located under tests/e2e/

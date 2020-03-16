@@ -8,6 +8,8 @@ spec:
   clientVersion: latest
   kind: "SentryAndValidator"
   isNetworkPolicyActive: "true"
+  isDataPersistenceActive: "true"
+  isMetricsSupportActive: "true"
   sentry:
     replicas: 1
     clientName: "IronoaSentry"

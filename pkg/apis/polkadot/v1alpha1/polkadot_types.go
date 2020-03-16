@@ -18,6 +18,8 @@ type PolkadotSpec struct {
 	Validator `json:"validator,omitempty"`
 	Sentry `json:"sentry,omitempty"`
 	IsNetworkPolicyActive string `json:"isNetworkPolicyActive,omitempty"`
+	IsDataPersistenceActive string `json:"isDataPersistenceActive,omitempty"`
+	IsMetricsSupportActive string `json:"isMetricsSupportActive,omitempty"`
 }
 
 type Validator struct {
@@ -26,7 +28,7 @@ type Validator struct {
 	ReservedSentryID string `json:"reservedSentryID,omitempty"`
 	CPULimit string `json:"CPULimit,omitempty"`
 	MemoryLimit string `json:"memoryLimit,omitempty"`
-	StorageClassName string `json:"storageClassName"`
+	StorageClassName string `json:"storageClassName,omitempty"`
 }
 
 type Sentry struct {
@@ -36,7 +38,7 @@ type Sentry struct {
 	ReservedValidatorID string `json:"reservedValidatorID,omitempty"`
 	CPULimit string `json:"CPULimit,omitempty"`
 	MemoryLimit string `json:"memoryLimit,omitempty"`
-	StorageClassName string `json:"storageClassName"`
+	StorageClassName string `json:"storageClassName,omitempty"`
 }
 
 // PolkadotStatus defines the observed state of Polkadot

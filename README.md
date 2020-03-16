@@ -81,6 +81,8 @@ spec:
   clientVersion: latest
   kind: "SentryAndValidator"
   isNetworkPolicyActive: "true"
+    isDataPersistenceActive: "true"
+    isMetricsSupportActive: "true"
   sentry:
     replicas: 1
     clientName: "IronoaSentry"
@@ -288,6 +290,10 @@ Image version of the clients. See the Updating of Node Versions section.
 If set to "true", the operator will handle the creation and the deployment of a Network Policy object that will ensure the secureness of the Validator (it only affects the Kind "SentryAndValidator"). 
 With the parameter active, the Validator is allowed to communicate only with the Sentry layer. Being this mechanism enforced via NetworkPolicy (kubernetes native object), it requires a network plugin installed in you cloud provided cluster (even in minikube) to work properly.  
 See the Secure Communications section.
+
+* isDataPersistenceActive: (string)
+
+* isMetricsSupportActive: (string)
 
 * replicas: (int)  
 Allows to decide how many Sentry replicas will be created. See the Node Cluster Scaling Support section.

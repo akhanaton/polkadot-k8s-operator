@@ -9,6 +9,38 @@ Client - Rust implementation of the Polkadot Host: https://github.com/paritytech
 
 The Polkadot Project: https://wiki.polkadot.network/en/
 
+## Table Of Contents
+
+* [Polkadot Custom Resource](#polkadot-custom-resource)  
+* [Requirements](#requirements)  
+    * [Optionals](#optionals)  
+* [How To Run](#how-to-run)  
+* [Clean up resources](#clean-up-resources)  
+* [How To Tutorial with Minikube](#how-to-tutorial-with-minikube)  
+    * [Clone the repository](#clone-the-repository)  
+    * [Parameters tuning](#parameters-tuning)  
+    * [Deployment phase](#deployment-phase)  
+* [Polkadot CR Configurable Parameters](#polkadot-cr-configurable-parameters)  
+* [Updating of Node Versions](#updating-of-node-versions)  
+* [Node Cluster Scaling Support](#node-cluster-scaling-support)  
+* [Secure Communications (Kind:SentryAndValidator)](#secure-communications-kindsentryandvalidator)  
+* [Network Policies](#network-policies)  
+    * [Default configuration](#default-configuration)  
+    * [Prerequisites](#prerequisites)  
+    * [Azure Example](#azure-example)  
+* [Data Persistence Support](#data-persistence-support)  
+    * [Default configuration](#default-configuration-1)  
+    * [How To Tutorial with Minikube](#how-to-tutorial-with-minikube-1)  
+* [Metrics Support](#metrics-support)  
+    * [Default configuration](#default-configuration-2)  
+    * [How to access to the metrics: Example in Minikube](#how-to-access-to-the-metrics-example-in-minikube)  
+* [E2E Testing](#e2e-testing)  
+    * [Build and run test](#build-and-run-test)  
+* [About Kubernetes](#about-kubernetes)  
+* [About the Operator](#about-the-operator)  
+* [About the Operator SDK and Framework](#about-the-operator-sdk-and-framework)  
+* [Project Directory Structure](#project-directory-structure)  
+
 ## Polkadot Custom Resource 
 
 The deployable CR (Custom Resource) is called "Polkadot".  

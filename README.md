@@ -11,7 +11,37 @@ The Polkadot Project: https://wiki.polkadot.network/en/
 
 ## Polkadot Custom Resource 
 
-The deployable CR (Custom Resource) is called "Polkadot"
+The deployable CR (Custom Resource) is called "Polkadot".  
+
+```yaml
+# Copyright (c) 2020 Swisscom Blockchain AG
+# Licensed under MIT License
+apiVersion: polkadot.swisscomblockchain.com/v1alpha1
+kind: Polkadot
+metadata:
+  name: polkadot-cr
+spec:
+  clientVersion: latest
+  kind: "SentryAndValidator"
+  isNetworkPolicyActive: "true"
+  isDataPersistenceActive: "true"
+  isMetricsSupportActive: "true"
+  sentry:
+    replicas: 1
+    clientName: "IronoaSentry"
+    nodeKey: "0000000000000000000000000000000000000000000000000000000000000013" # Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
+    reservedValidatorID: "QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM"
+    CPULimit: "0.5"
+    memoryLimit: "512Mi"
+    storageClassName: "default" #["default","managed-premium"]
+  validator:
+    clientName: "IronoaValidator"
+    nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
+    reservedSentryID: "QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm"
+    CPULimit: "0.5"
+    memoryLimit: "512Mi"
+    storageClassName: "default" #["default","managed-premium"]
+```
 
 ## Requirements
 
@@ -80,9 +110,6 @@ metadata:
 spec:
   clientVersion: latest
   kind: "SentryAndValidator"
-  isNetworkPolicyActive: "true"
-    isDataPersistenceActive: "true"
-    isMetricsSupportActive: "true"
   sentry:
     replicas: 1
     clientName: "IronoaSentry"
@@ -90,14 +117,12 @@ spec:
     reservedValidatorID: "QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM"
     CPULimit: "0.5"
     memoryLimit: "512Mi"
-    storageClassName: "default" #["default","managed-premium"]
   validator:
     clientName: "IronoaValidator"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
     reservedSentryID: "QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm"
     CPULimit: "0.5"
     memoryLimit: "512Mi"
-    storageClassName: "default" #["default","managed-premium"]
 ```
 
 Example of a deployable deploy/operator.yaml, configured to work with my docker hub account (please change the image parameter).
@@ -343,6 +368,10 @@ The configuration is based on the "polkadot-secure-validator" guidelines: https:
 By default, pods are non-isolated; they accept traffic from any source. Pods become isolated by having a NetworkPolicy that selects them. A network policy is a specification of how groups of pods are allowed to communicate with each other and other network endpoints.
 Reference: https://kubernetes.io/docs/concepts/services-networking/network-policies/
 
+### Default configuration
+
+* Network Policies functionality is not active by default, you have to explicitly activate it by setting the parameter isNetworkPolicyActive to "true"
+
 ### Prerequisites
 
 Network policies are implemented by the network plugin. To use network policies, you must be using a networking solution which supports NetworkPolicy. Creating a NetworkPolicy resource without a controller that implements it will have no effect.
@@ -360,6 +389,10 @@ Deployments on Kubernetes are by their nature ephemeral. Thus it is important to
 
 The current solution is using a Kubernetes Persistent Volume Claim with Azure Disk.
 Reference: https://docs.microsoft.com/en-us/azure/aks/azure-disks-dynamic-pv
+
+### Default configuration
+
+* Data Persistence Support functionality is not active by default, you have to explicitly activate it by setting the parameter isDataPersistenceActive to "true"
 
 ### How To Tutorial with Minikube
 
@@ -471,7 +504,7 @@ The metrics are provided in the Prometheus format.
 
 ### Default configuration
 
-* Metrics functionality is active
+* Metrics functionality is not active by default, you have to explicitly activate it by setting the parameter isMetricsSupportActive to "true"
 * Each Pod Service provide access to the metrics:
     * at port 8000
     * at /metrics endpoint

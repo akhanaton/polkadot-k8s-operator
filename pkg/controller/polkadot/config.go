@@ -3,25 +3,25 @@
 package polkadot
 
 const (
-	imageName              = "parity/polkadot"
-	imageNameMetrics 	   = "ironoa/polkadot-metrics:v0.0.1" //define your favourite
-	serviceSentryName      = "sentry-service"
-	serviceValidatorName   = "validator-service"
-	metricsPort			   = 8000
-	metricsPortName		   = "http-metrics"
+	imageName            = "parity/polkadot"
+	imageNameMetrics     = "ironoa/polkadot-metrics:v0.0.1" //define your favourite
+	ServiceSentryName    = "sentry-service"
+	ServiceValidatorName = "validator-service"
+	metricsPort            = 8000
+	metricsPortName        = "http-metrics"
 	P2PPort                = 30333
 	P2PPortName            = "p2p"
 	RPCPort                = 9933
 	RPCPortName            = "http-rpc"
 	WSPort                 = 9944
 	WSPortName             = "websocket-rpc"
-	validatorSSName        = "validator-sset"
-	sentrySSName           = "sentry-sset"
-	validatorNetworkPolicy = "validator-networkpolicy"
+	ValidatorSSName        = "validator-sset"
+	SentrySSName           = "sentry-sset"
+	ValidatorNetworkPolicy = "validator-networkpolicy"
 	volumeMountPath        = "/data"
-	volumeName 			   = "polkadot-volume"
+	volumeName             = "polkadot-volume"
 	storageRequest         = "10Gi"
-	serviceName 		   = "polkadot"
+	serviceName            = "polkadot"
 )
 
 

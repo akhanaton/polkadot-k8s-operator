@@ -15,7 +15,7 @@ func newNetworkPolicyValidator(CRInstance *polkadotv1alpha1.Polkadot) *v1.Networ
 	return &v1.NetworkPolicy{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      validatorNetworkPolicy,
+			Name:      ValidatorNetworkPolicy,
 			Namespace: CRInstance.Namespace,
 		},
 		Spec: v1.NetworkPolicySpec{

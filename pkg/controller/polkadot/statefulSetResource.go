@@ -65,11 +65,11 @@ func newStatefulSetSentry(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Statefu
 	commands = append(commands,"--sentry")
 	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
 		reservedValidatorID := CRInstance.Spec.Sentry.ReservedValidatorID
-		commands = append(commands, "--reserved-nodes", "/dns4/"+serviceValidatorName+"/tcp/30333/p2p/"+reservedValidatorID)
+		commands = append(commands, "--reserved-nodes", "/dns4/"+ServiceValidatorName+"/tcp/30333/p2p/"+reservedValidatorID)
 	}
 
 	p := Parameters{
-		name:                    sentrySSName,
+		name:                    SentrySSName,
 		namespace:               CRInstance.Namespace,
 		labels:                  labels,
 		replicas:                replicas,
@@ -79,7 +79,7 @@ func newStatefulSetSentry(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Statefu
 		CPULimit:                CPULimit,
 		memoryLimit:             memoryLimit,
 		isDataPersistenceActive: isDataPersistenceActive,
-		isMetricsSupportActive: isMetricsSupportActive,
+		isMetricsSupportActive:  isMetricsSupportActive,
 	}
 
 	return getStatefulSet(p)
@@ -104,11 +104,11 @@ func newStatefulSetValidator(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Stat
 		reservedSentryID := CRInstance.Spec.Validator.ReservedSentryID
 		commands = append(commands,
 			"--reserved-only",
-			"--reserved-nodes", "/dns4/"+serviceSentryName+"/tcp/30333/p2p/"+reservedSentryID)
+			"--reserved-nodes", "/dns4/"+ServiceSentryName+"/tcp/30333/p2p/"+reservedSentryID)
 	}
 
 	p := Parameters{
-		name:                    validatorSSName,
+		name:                    ValidatorSSName,
 		namespace:               CRInstance.Namespace,
 		labels:                  labels,
 		replicas:                replicas,
@@ -118,7 +118,7 @@ func newStatefulSetValidator(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Stat
 		CPULimit:                CPULimit,
 		memoryLimit:             memoryLimit,
 		isDataPersistenceActive: isDataPersistenceActive,
-		isMetricsSupportActive: isMetricsSupportActive,
+		isMetricsSupportActive:  isMetricsSupportActive,
 	}
 
 	return getStatefulSet(p)

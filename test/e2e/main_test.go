@@ -5,12 +5,21 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	"github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis"
 	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
+	"github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/controller/polkadot"
 	"github.com/swisscom-blockchain/polkadot-k8s-operator/test/e2e/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
 	"time"
 
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
+)
+
+const (
+	sentrySSName = polkadot.SentrySSName
+	validatorSSName = polkadot.ValidatorSSName
+	serviceSentryName = polkadot.ServiceSentryName
+	serviceValidatorName = polkadot.ServiceValidatorName
+	validatorNetworkPolicy = polkadot.ValidatorNetworkPolicy
 )
 
 var (
@@ -125,11 +134,11 @@ func testPolkadotSentryAndValidator(t *testing.T) {
 }
 
 func testStatefulSetCreationSentry(t *testing.T) {
-	testStatefulSetCreation(t,"sentry-sset")
+	testStatefulSetCreation(t,sentrySSName)
 }
 
 func testStatefulSetCreationValidator(t *testing.T) {
-	testStatefulSetCreation(t,"validator-sset")
+	testStatefulSetCreation(t,validatorSSName)
 }
 
 func testStatefulSetCreation(t *testing.T, name string) {
@@ -140,11 +149,11 @@ func testStatefulSetCreation(t *testing.T, name string) {
 }
 
 func testStatefulSetDeletionSentry(t *testing.T) {
-	testStatefulSetDeletion(t,"sentry-sset")
+	testStatefulSetDeletion(t,sentrySSName)
 }
 
 func testStatefulSetDeletionValidator(t *testing.T) {
-	testStatefulSetDeletion(t,"validator-sset")
+	testStatefulSetDeletion(t,validatorSSName)
 }
 
 func testStatefulSetDeletion(t *testing.T, name string) {
@@ -155,11 +164,11 @@ func testStatefulSetDeletion(t *testing.T, name string) {
 }
 
 func testServiceCreationSentry(t *testing.T) {
-	testServiceCreation(t, "sentry-service")
+	testServiceCreation(t, serviceSentryName)
 }
 
 func testServiceCreationValidator(t *testing.T) {
-	testServiceCreation(t, "validator-service")
+	testServiceCreation(t, serviceValidatorName)
 }
 
 func testServiceCreation(t *testing.T, name string) {
@@ -170,11 +179,11 @@ func testServiceCreation(t *testing.T, name string) {
 }
 
 func testServiceDeletionSentry(t *testing.T) {
-	testServiceDeletion(t, "sentry-service")
+	testServiceDeletion(t, serviceSentryName)
 }
 
 func testServiceDeletionValidator(t *testing.T) {
-	testServiceDeletion(t, "validator-service")
+	testServiceDeletion(t, serviceValidatorName)
 }
 
 func testServiceDeletion(t *testing.T, name string) {
@@ -185,14 +194,14 @@ func testServiceDeletion(t *testing.T, name string) {
 }
 
 func testNetworkPolicyCreation(t *testing.T) {
-	err := utils.WaitForNetworkPolicy(t, frameworkGlobal.KubeClient, namespace, "validator-networkpolicy", time.Second*5, time.Second*30)
+	err := utils.WaitForNetworkPolicy(t, frameworkGlobal.KubeClient, namespace, validatorNetworkPolicy, time.Second*5, time.Second*30)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func testNetworkPolicyDeletion(t *testing.T) {
-	err := utils.WaitForNetworkPolicyDelete(t, frameworkGlobal.KubeClient, namespace, "validator-networkpolicy", time.Second*5, time.Second*30)
+	err := utils.WaitForNetworkPolicyDelete(t, frameworkGlobal.KubeClient, namespace, validatorNetworkPolicy, time.Second*5, time.Second*30)
 	if err != nil {
 		t.Fatal(err)
 	}

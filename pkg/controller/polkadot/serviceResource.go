@@ -11,7 +11,7 @@ import (
 
 func newServiceSentry(CRInstance *polkadotv1alpha1.Polkadot) *corev1.Service {
 	labels := getSentrylabels()
-	return getService(serviceSentryName,CRInstance.Namespace,labels,corev1.ServiceTypeNodePort)
+	return getService(ServiceSentryName,CRInstance.Namespace,labels,corev1.ServiceTypeNodePort)
 }
 
 func newServiceValidator(CRInstance *polkadotv1alpha1.Polkadot) *corev1.Service {
@@ -20,7 +20,7 @@ func newServiceValidator(CRInstance *polkadotv1alpha1.Polkadot) *corev1.Service 
 	if CRKind(CRInstance.Spec.Kind) == Validator {
 		serviceType = corev1.ServiceTypeNodePort
 	}
-	return getService(serviceValidatorName,CRInstance.Namespace,labels,serviceType)
+	return getService(ServiceValidatorName,CRInstance.Namespace,labels,serviceType)
 }
 
 func getService(name string, namespace string, labels  map[string]string, serviceType corev1.ServiceType) *corev1.Service{

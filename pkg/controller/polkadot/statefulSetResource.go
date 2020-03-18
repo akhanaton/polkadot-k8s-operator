@@ -43,8 +43,7 @@ type Parameters struct{
 	storageClassName string
 	version string
 	commands []string
-	CPULimit string
-	memoryLimit string
+	clientContainerResources corev1.ResourceRequirements
 	isDataPersistenceActive string
 	isMetricsSupportActive string
 }
@@ -54,8 +53,7 @@ func newStatefulSetSentry(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Statefu
 	version := CRInstance.Spec.ClientVersion
 	clientName := CRInstance.Spec.Sentry.ClientName
 	nodeKey := CRInstance.Spec.Sentry.NodeKey
-	CPULimit := CRInstance.Spec.Sentry.CPULimit
-	memoryLimit := CRInstance.Spec.Sentry.MemoryLimit
+	clientContainerResources := CRInstance.Spec.Sentry.Resources
 	storageClassName := CRInstance.Spec.Sentry.StorageClassName
 	isDataPersistenceActive := CRInstance.Spec.IsDataPersistenceActive
 	isMetricsSupportActive := CRInstance.Spec.IsMetricsSupportActive
@@ -77,8 +75,7 @@ func newStatefulSetSentry(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Statefu
 		storageClassName:        storageClassName,
 		version:                 version,
 		commands:                commands,
-		CPULimit:                CPULimit,
-		memoryLimit:             memoryLimit,
+		clientContainerResources:clientContainerResources,
 		isDataPersistenceActive: isDataPersistenceActive,
 		isMetricsSupportActive:  isMetricsSupportActive,
 	}
@@ -91,8 +88,7 @@ func newStatefulSetValidator(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Stat
 	version := CRInstance.Spec.ClientVersion
 	clientName := CRInstance.Spec.Validator.ClientName
 	nodeKey := CRInstance.Spec.Validator.NodeKey
-	CPULimit := CRInstance.Spec.Validator.CPULimit
-	memoryLimit := CRInstance.Spec.Validator.MemoryLimit
+	clientContainerResources := CRInstance.Spec.Validator.Resources
 	storageClassName := CRInstance.Spec.Validator.StorageClassName
 	isDataPersistenceActive := CRInstance.Spec.IsDataPersistenceActive
 	isMetricsSupportActive := CRInstance.Spec.IsMetricsSupportActive
@@ -116,8 +112,7 @@ func newStatefulSetValidator(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Stat
 		storageClassName:        storageClassName,
 		version:                 version,
 		commands:                commands,
-		CPULimit:                CPULimit,
-		memoryLimit:             memoryLimit,
+		clientContainerResources:clientContainerResources,
 		isDataPersistenceActive: isDataPersistenceActive,
 		isMetricsSupportActive:  isMetricsSupportActive,
 	}
@@ -180,7 +175,7 @@ func getContainerClient(p Parameters) corev1.Container{
 			Ports:          getContainerPortsClient(),
 			LivenessProbe:  getHealthProbeClient(),
 			ReadinessProbe: getHealthProbeClient(),
-			Resources:      getResourceLimits(p.CPULimit,p.memoryLimit),
+			Resources:     p.clientContainerResources,
 		}
 		if p.isDataPersistenceActive == "true"{
 			container.VolumeMounts=getVolumeMounts()
@@ -232,7 +227,7 @@ func getVolumeClaimTemplate(storageClassName string) *corev1.PersistentVolumeCla
 		ObjectMeta: metav1.ObjectMeta{
 			Name: volumeName,
 		},
-		Spec: corev1.PersistentVolumeClaimSpec{
+		Spec: corev1.PersistentVolumeClaimSpec{ //TODO make granular from here
 
 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
 			Resources: corev1.ResourceRequirements{
@@ -275,15 +270,6 @@ func getHealthProbeMetrics() *corev1.Probe{
 		},
 		InitialDelaySeconds: 10,
 		PeriodSeconds:       10,
-	}
-}
-
-func getResourceLimits(cpu,memory string) corev1.ResourceRequirements{ //TODO provide more fine graned solution, the entire ResourceRequirement from the yaml
-	return corev1.ResourceRequirements{
-		Limits: corev1.ResourceList{
-			"cpu":    resource.MustParse(cpu),
-			"memory": resource.MustParse(memory),
-		},
 	}
 }
 

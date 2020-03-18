@@ -2,6 +2,8 @@ package utils
 
 import (
 	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 )
@@ -58,8 +60,12 @@ func newSentry() *polkadotv1alpha1.Sentry{
 		ClientName:          "IronoaSentry",
 		NodeKey:             "0000000000000000000000000000000000000000000000000000000000000013",
 		ReservedValidatorID: "QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM",
-		CPULimit:            "0.5",
-		MemoryLimit:         "500Mi",
+		Resources: v1.ResourceRequirements{
+			Limits:   v1.ResourceList{
+				"cpu":    resource.MustParse("0.2"),
+				"memory": resource.MustParse("100Mi"),
+			},
+		},
 		StorageClassName:    "local",
 	}
 }
@@ -69,8 +75,12 @@ func newValidator() *polkadotv1alpha1.Validator{
 		ClientName:          "IronoaValidator",
 		NodeKey:             "0000000000000000000000000000000000000000000000000000000000000021",
 		ReservedSentryID: 	 "QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm",
-		CPULimit:            "0.5",
-		MemoryLimit:         "500Mi",
+		Resources: v1.ResourceRequirements{
+			Limits:   v1.ResourceList{
+				"cpu":    resource.MustParse("0.2"),
+				"memory": resource.MustParse("100Mi"),
+			},
+		},
 		StorageClassName:    "local",
 	}
 }

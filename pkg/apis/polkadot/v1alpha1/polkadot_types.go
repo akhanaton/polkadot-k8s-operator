@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -26,8 +27,7 @@ type Validator struct {
 	ClientName string `json:"clientName"`
 	NodeKey string `json:"nodeKey"`
 	ReservedSentryID string `json:"reservedSentryID,omitempty"`
-	CPULimit string `json:"CPULimit,omitempty"`
-	MemoryLimit string `json:"memoryLimit,omitempty"`
+	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,8,opt,name=resources"`
 	StorageClassName string `json:"storageClassName,omitempty"`
 }
 
@@ -36,8 +36,7 @@ type Sentry struct {
 	ClientName string `json:"clientName"`
 	NodeKey string `json:"nodeKey"`
 	ReservedValidatorID string `json:"reservedValidatorID,omitempty"`
-	CPULimit string `json:"CPULimit,omitempty"`
-	MemoryLimit string `json:"memoryLimit,omitempty"`
+	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,8,opt,name=resources"`
 	StorageClassName string `json:"storageClassName,omitempty"`
 }
 

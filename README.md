@@ -64,15 +64,19 @@ spec:
     clientName: "IronoaSentry"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000013" # Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
     reservedValidatorID: "QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM"
-    CPULimit: "0.5"
-    memoryLimit: "512Mi"
+    resources:
+      limits:
+        memory: "512Mi"
+        cpu: "0.5"
     storageClassName: "default" #["default","managed-premium"]
   validator:
     clientName: "IronoaValidator"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
     reservedSentryID: "QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm"
-    CPULimit: "0.5"
-    memoryLimit: "512Mi"
+    resources:
+      limits:
+        memory: "512Mi"
+        cpu: "0.5"
     storageClassName: "default" #["default","managed-premium"]
 ```
 
@@ -148,14 +152,18 @@ spec:
     clientName: "IronoaSentry"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000013" # Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
     reservedValidatorID: "QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM"
-    CPULimit: "0.5"
-    memoryLimit: "512Mi"
+    resources:
+      limits:
+        memory: "512Mi"
+        cpu: "0.5"
   validator:
     clientName: "IronoaValidator"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
     reservedSentryID: "QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm"
-    CPULimit: "0.5"
-    memoryLimit: "512Mi"
+    resources:
+      limits:
+        memory: "512Mi"
+        cpu: "0.5"
 ```
 
 Example of a deployable deploy/operator.yaml, configured to work with my docker hub account (please change the image parameter).
@@ -184,23 +192,29 @@ spec:
           - polkadot-operator
           imagePullPolicy: Always
           env:
-            - name: WATCH_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "polkadot-operator"
+            - name: CONTROLLER_NAME
+              value: "polkadot-controller"
+            - name: IMAGE_CLIENT
+              value: "parity/polkadot"
+            - name: IMAGE_METRICS
+              value: "ironoa/polkadot-metrics:v0.0.1"  #define your favourite
+            - name: METRICS_PORT
+              value: "8000"
+            - name: P2P_PORT
+              value: "30333"
+            - name: RPC_PORT
+              value: "9933"
+            - name: WS_PORT
+              value: "9944"
 ```
 
-Change scripts/utils/compileAndDeployOperator.sh accordingly to the previous configured image value.
+Change scripts/config/config.sh accordingly to the previous configured image value.
 ```sh
-operator-sdk build ironoa/customresource-operator:v0.0.8 # define your favourite
-docker push ironoa/customresource-operator:v0.0.8 #define your favourite
-kubectl create -f deploy/operator.yaml
+IMAGE_OPERATOR=ironoa/customresource-operator:v0.0.8 #define your favourite
+IMAGE_METRICS=ironoa/polkadot-metrics:v0.0.1 # define your favourite
+# The above parameters have to match with the ones in the deployed resource defined in the deploy/operator.yaml file
 ```
 
 ### Deployment phase
@@ -378,11 +392,8 @@ Allows to decide how many Sentry replicas will be created. See the Node Cluster 
 
 * clientName: (string)
 
-* CPULimit: (string)  
-The format is the usual kubernetes and docker standard (e.g. "0.5")
-
-* memoryLimit: (string)  
-The format is the usual kubernetes and docker standard (e.g. "500Mi")
+resources: (ResourceRequirements)  
+See the official godoc: https://godoc.org/k8s.io/api/core/v1#ResourceRequirements
 
 * nodeKey: (string)  
 Identity of the node, private (e.g. "0000000000000000000000000000000000000000000000000000000000000013")
@@ -533,15 +544,19 @@ spec:
     clientName: "IronoaSentry"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000013" # Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
     reservedValidatorID: "QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM"
-    CPULimit: "0.5"
-    memoryLimit: "512Mi"
+    resources:
+      limits:
+        memory: "512Mi"
+        cpu: "0.5"
     storageClassName: "local"
   validator:
     clientName: "IronoaValidator"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
     reservedSentryID: "QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm"
-    CPULimit: "0.5"
-    memoryLimit: "512Mi"
+    resources:
+      limits:
+        memory: "512Mi"
+        cpu: "0.5"
     storageClassName: "local"
 ```
 

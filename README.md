@@ -30,7 +30,6 @@ The Polkadot Project: https://wiki.polkadot.network/en/
     * [Prerequisites](#prerequisites)  
     * [Azure Example](#azure-example)  
 * [Data Persistence Support](#data-persistence-support)  
-    * [Default configuration](#default-configuration-1)  
     * [How To Tutorial with Minikube](#how-to-tutorial-with-minikube-1)  
 * [Metrics Support](#metrics-support)  
     * [Default configuration](#default-configuration-2)  
@@ -68,7 +67,8 @@ spec:
       limits:
         memory: "512Mi"
         cpu: "0.5"
-    storageClassName: "default" #["default","managed-premium"]
+    dataPersistence:
+      enabled: false
   validator:
     clientName: "IronoaValidator"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
@@ -77,7 +77,18 @@ spec:
       limits:
         memory: "512Mi"
         cpu: "0.5"
-    storageClassName: "default" #["default","managed-premium"]
+    dataPersistence:
+      enabled: true
+      persistentVolumeClaim:
+        metadata:
+          name: "polkadot-volume"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+          storageClassName: managed-premium #[default,managed-premium,local]
 ```
 
 ## Requirements
@@ -383,8 +394,6 @@ If set to "true", the operator will handle the creation and the deployment of a 
 With the parameter active, the Validator is allowed to communicate only with the Sentry layer. Being this mechanism enforced via NetworkPolicy (kubernetes native object), it requires a network plugin installed in you cloud provided cluster (even in minikube) to work properly.  
 See the Secure Communications section.
 
-* isDataPersistenceActive: (string)
-
 * isMetricsSupportActive: (string)
 
 * replicas: (int)  
@@ -398,11 +407,15 @@ See the official godoc: https://godoc.org/k8s.io/api/core/v1#ResourceRequirement
 * nodeKey: (string)  
 Identity of the node, private (e.g. "0000000000000000000000000000000000000000000000000000000000000013")
 
-* storageClassName: (string)  
-Desired volume type. For instance, Azure provides two built in storage classes:
-    * "default": HHD backed
-    * "managed-premium": SSD backed, high performance
-    * See Data Persistence Support section for more information.     
+* dataPersistence: (struct)
+    * enabled: (string)
+    * persistentVolumeClaim: (PersistentVolumeClaim)  
+    See the official godoc: https://godoc.org/k8s.io/api/core/v1#PersistentVolumeClaim  
+        * storageClassName: (string)  
+        This field is particularly interesting. For instance, Azure provides two built in storage classes:  
+            * "default": HHD backed
+            * "managed-premium": SSD backed, high performance  
+        See Data Persistence Support section for more information.     
 
 * kind: Sentry | Validator | SentryAndValidator (string)  
 Desired deployable configuration:
@@ -451,16 +464,15 @@ You can test the effectiveness of the network policy creating a new "default den
 
 Deployments on Kubernetes are by their nature ephemeral. Thus it is important to  provide Kubernetes with support for data persistence – such as a virtual SSD in the cloud – so that new instances of the application can resume the state of the previous instance. It can be tested by killing a Stateful Set instance and then checking whether the state (block number synchronization) is resumed by the new instance.  
 
-The current solution is using a Kubernetes Persistent Volume Claim with Azure Disk.
+A tested working solution is using a Kubernetes Persistent Volume Claim with Azure Built in storage classes (Azure Disk).
 Reference: https://docs.microsoft.com/en-us/azure/aks/azure-disks-dynamic-pv
 
-### Default configuration
-
-* Data Persistence Support functionality is not active by default, you have to explicitly activate it by setting the parameter isDataPersistenceActive to "true"
+You can even decide to deploy your own StorageClass according to the specs provided by your favourite Cluster Provider, making this solution cluster agnostic.  
+Reference: https://kubernetes.io/docs/concepts/storage/storage-classes/
 
 ### How To Tutorial with Minikube
 
-If you want to test it locally, you first have to manually provide a class of few persistent volumes (at least two, one for each client you deploy) to minikube. Minikube will extract from this pool an available volume thanks to the Persistent Volume Claim mechanism.   
+If you want to test it locally, you first have to manually provide a few persistent volumes (at least two, one for each client you deploy) to minikube. Minikube will extract from this named pool (storageClassName) an available volume thanks to the Persistent Volume Claim mechanism.   
 Please note, in this example we decided to name the storageClassName as "local".
 
 ```yaml
@@ -498,7 +510,7 @@ spec:
     path: "/mnt/vda1/data1"
 ```
 
-The fields "hostPath -> path" describe where the folder will be mounted inside minikube. We have to create that folders and grant some permission first:
+The fields "hostPath -> path" describe where the folder will be mounted inside minikube. We have first to create that folders and grant some permission:
 
 ```sh
 # ssh into Minikube
@@ -548,7 +560,18 @@ spec:
       limits:
         memory: "512Mi"
         cpu: "0.5"
-    storageClassName: "local"
+    dataPersistence:
+      enabled: true
+      persistentVolumeClaim:
+        metadata:
+          name: "polkadot-volume"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+          storageClassName: local 
   validator:
     clientName: "IronoaValidator"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
@@ -557,7 +580,18 @@ spec:
       limits:
         memory: "512Mi"
         cpu: "0.5"
-    storageClassName: "local"
+    dataPersistence:
+      enabled: true
+      persistentVolumeClaim:
+        metadata:
+          name: "polkadot-volume"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+          storageClassName: local 
 ```
 
 You can now deploy the operator as usual, also with the init.sh script.

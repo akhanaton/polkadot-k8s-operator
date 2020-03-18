@@ -27,8 +27,8 @@ type Validator struct {
 	ClientName string `json:"clientName"`
 	NodeKey string `json:"nodeKey"`
 	ReservedSentryID string `json:"reservedSentryID,omitempty"`
-	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,8,opt,name=resources"`
-	StorageClassName string `json:"storageClassName,omitempty"`
+	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,opt,name=resources"`
+	DataPersistence DataPersistence `json:"dataPersistence"`
 }
 
 type Sentry struct {
@@ -36,8 +36,13 @@ type Sentry struct {
 	ClientName string `json:"clientName"`
 	NodeKey string `json:"nodeKey"`
 	ReservedValidatorID string `json:"reservedValidatorID,omitempty"`
-	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,8,opt,name=resources"`
-	StorageClassName string `json:"storageClassName,omitempty"`
+	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,opt,name=resources"`
+	DataPersistence DataPersistence `json:"dataPersistence"`
+}
+
+type DataPersistence struct {
+	Enabled bool`json:"enabled"`
+	PersistentVolumeClaim corev1.PersistentVolumeClaim `json:"persistentVolumeClaim,omitempty" protobuf:"bytes,name=volumeClaimTemplates"`
 }
 
 // PolkadotStatus defines the observed state of Polkadot
@@ -45,6 +50,8 @@ type PolkadotStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+
+	// TODO add observable status here
 
 	// Nodes are the names of the CustomResource pods... ?? to check
 	Nodes []string `json:"nodes"`

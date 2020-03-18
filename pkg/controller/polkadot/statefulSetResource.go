@@ -7,7 +7,6 @@ import (
 	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"strconv"
@@ -40,11 +39,10 @@ type Parameters struct{
 	namespace string
 	labels map[string]string
 	replicas int32
-	storageClassName string
 	version string
 	commands []string
 	clientContainerResources corev1.ResourceRequirements
-	isDataPersistenceActive string
+	dataPersistence polkadotv1alpha1.DataPersistence
 	isMetricsSupportActive string
 }
 
@@ -54,7 +52,7 @@ func newStatefulSetSentry(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Statefu
 	clientName := CRInstance.Spec.Sentry.ClientName
 	nodeKey := CRInstance.Spec.Sentry.NodeKey
 	clientContainerResources := CRInstance.Spec.Sentry.Resources
-	storageClassName := CRInstance.Spec.Sentry.StorageClassName
+	dataPersistence := CRInstance.Spec.Sentry.DataPersistence
 	isDataPersistenceActive := CRInstance.Spec.IsDataPersistenceActive
 	isMetricsSupportActive := CRInstance.Spec.IsMetricsSupportActive
 
@@ -72,11 +70,10 @@ func newStatefulSetSentry(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Statefu
 		namespace:               CRInstance.Namespace,
 		labels:                  labels,
 		replicas:                replicas,
-		storageClassName:        storageClassName,
 		version:                 version,
 		commands:                commands,
 		clientContainerResources:clientContainerResources,
-		isDataPersistenceActive: isDataPersistenceActive,
+		dataPersistence: dataPersistence,
 		isMetricsSupportActive:  isMetricsSupportActive,
 	}
 
@@ -89,7 +86,7 @@ func newStatefulSetValidator(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Stat
 	clientName := CRInstance.Spec.Validator.ClientName
 	nodeKey := CRInstance.Spec.Validator.NodeKey
 	clientContainerResources := CRInstance.Spec.Validator.Resources
-	storageClassName := CRInstance.Spec.Validator.StorageClassName
+	dataPersistence := CRInstance.Spec.Validator.DataPersistence
 	isDataPersistenceActive := CRInstance.Spec.IsDataPersistenceActive
 	isMetricsSupportActive := CRInstance.Spec.IsMetricsSupportActive
 
@@ -109,11 +106,10 @@ func newStatefulSetValidator(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Stat
 		namespace:               CRInstance.Namespace,
 		labels:                  labels,
 		replicas:                replicas,
-		storageClassName:        storageClassName,
 		version:                 version,
 		commands:                commands,
 		clientContainerResources:clientContainerResources,
-		isDataPersistenceActive: isDataPersistenceActive,
+		dataPersistence: dataPersistence,
 		isMetricsSupportActive:  isMetricsSupportActive,
 	}
 
@@ -145,8 +141,8 @@ func getStatefulSetSpec(p Parameters) appsv1.StatefulSetSpec{
 			Spec: getPodSpec(p),
 		},
 	}
-	if p.isDataPersistenceActive == "true"{
-		sSpec.VolumeClaimTemplates = []corev1.PersistentVolumeClaim{ *getVolumeClaimTemplate(p.storageClassName) }
+	if p.dataPersistence.Enabled == true{
+		sSpec.VolumeClaimTemplates = []corev1.PersistentVolumeClaim{ p.dataPersistence.PersistentVolumeClaim }
 	}
 	return sSpec
 }
@@ -158,8 +154,8 @@ func getPodSpec(p Parameters) corev1.PodSpec{
 			getContainerClient(p),
 		},
 	}
-	if p.isDataPersistenceActive == "true"{
-		spec.InitContainers = []corev1.Container{ *getVolumePermissionInitContainer() }
+	if p.dataPersistence.Enabled == true{
+		spec.InitContainers = []corev1.Container{ *getVolumePermissionInitContainer(p.dataPersistence.PersistentVolumeClaim.ObjectMeta.Name) }
 	}
 	if p.isMetricsSupportActive == "true"{
 		spec.Containers = append(spec.Containers, getContainerMetrics())
@@ -177,8 +173,8 @@ func getContainerClient(p Parameters) corev1.Container{
 			ReadinessProbe: getHealthProbeClient(),
 			Resources:     p.clientContainerResources,
 		}
-		if p.isDataPersistenceActive == "true"{
-			container.VolumeMounts=getVolumeMounts()
+		if p.dataPersistence.Enabled == true{
+			container.VolumeMounts=getVolumeMounts(p.dataPersistence.PersistentVolumeClaim.ObjectMeta.Name)
 		}
 		return container
 }
@@ -192,14 +188,14 @@ func getContainerMetrics() corev1.Container{
 	}
 }
 
-func getVolumePermissionInitContainer() *corev1.Container {
+func getVolumePermissionInitContainer(volumeMountName string) *corev1.Container {
 	rootUser := int64(0)
 	runAsNonRootFalse := false
 
 	return &corev1.Container {
 		Name:  "volume-mount-permissions-data",
 		Image: "busybox",
-		VolumeMounts: getVolumeMounts(),
+		VolumeMounts: getVolumeMounts(volumeMountName),
 		SecurityContext: &corev1.SecurityContext{
 			RunAsUser:          &rootUser,
 			RunAsNonRoot: &runAsNonRootFalse,
@@ -222,25 +218,7 @@ func getPodSecurityContext() *corev1.PodSecurityContext {
 	}
 }
 
-func getVolumeClaimTemplate(storageClassName string) *corev1.PersistentVolumeClaim {
-	return &corev1.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: volumeName,
-		},
-		Spec: corev1.PersistentVolumeClaimSpec{ //TODO make granular from here
-
-			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-			Resources: corev1.ResourceRequirements{
-				Requests: corev1.ResourceList{
-					"storage": resource.MustParse(storageRequest),
-				},
-			},
-			StorageClassName: &storageClassName,
-		},
-	}
-}
-
-func getVolumeMounts() []corev1.VolumeMount{
+func getVolumeMounts(volumeName string) []corev1.VolumeMount{
 	return []corev1.VolumeMount{{
 		Name:      volumeName,
 		MountPath: volumeMountPath,

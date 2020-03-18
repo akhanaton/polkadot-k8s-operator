@@ -66,7 +66,9 @@ func newSentry() *polkadotv1alpha1.Sentry{
 				"memory": resource.MustParse("100Mi"),
 			},
 		},
-		StorageClassName:    "local",
+		DataPersistence: polkadotv1alpha1.DataPersistence{
+			Enabled:false,
+		},
 	}
 }
 
@@ -81,6 +83,8 @@ func newValidator() *polkadotv1alpha1.Validator{
 				"memory": resource.MustParse("100Mi"),
 			},
 		},
-		StorageClassName:    "local",
+		DataPersistence: polkadotv1alpha1.DataPersistence{
+			Enabled:false,
+		},
 	}
 }

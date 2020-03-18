@@ -8,7 +8,6 @@ spec:
   clientVersion: latest
   kind: "SentryAndValidator"
   isNetworkPolicyActive: "false"
-  isDataPersistenceActive: "false" # TODO dataPersistence: move into sentry and validator
   isMetricsSupportActive: "false" # TODO metrics: -> enabled:true
   sentry:
     replicas: 1
@@ -19,8 +18,18 @@ spec:
       limits:
         memory: "500Mi"
         cpu: "0.5"
-    # TODO dataPersistence: enabled, storageClassName, ...
-    storageClassName: "default" #["default","managed-premium"]
+    dataPersistence:
+      enabled: true
+      persistentVolumeClaim:
+        metadata:
+          name: "polkadot-volume"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+          storageClassName: local #[default,managed-premium,local]
   validator:
     clientName: "IronoaValidator"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
@@ -29,4 +38,5 @@ spec:
       limits:
         memory: "500Mi"
         cpu: "0.5"
-    storageClassName: "default" #["default","managed-premium"]
+    dataPersistence:
+      enabled: false

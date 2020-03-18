@@ -7,8 +7,10 @@ metadata:
 spec:
   clientVersion: latest
   kind: "SentryAndValidator"
-  isNetworkPolicyActive: "false"
-  isMetricsSupportActive: "false" # TODO metrics: -> enabled:true
+  secureCommunicationSupport:
+    enabled: false
+  metricsSupport:
+    enabled: false
   sentry:
     replicas: 1
     clientName: "IronoaSentry"
@@ -18,7 +20,7 @@ spec:
       limits:
         memory: "500Mi"
         cpu: "0.5"
-    dataPersistence:
+    dataPersistenceSupport:
       enabled: true
       persistentVolumeClaim:
         metadata:
@@ -38,5 +40,5 @@ spec:
       limits:
         memory: "500Mi"
         cpu: "0.5"
-    dataPersistence:
+    dataPersistenceSupport:
       enabled: false

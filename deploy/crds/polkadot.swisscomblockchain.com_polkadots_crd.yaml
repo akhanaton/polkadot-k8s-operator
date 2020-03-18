@@ -33,20 +33,27 @@ spec:
           properties:
             clientVersion:
               type: string
-            isDataPersistenceActive:
-              type: string
-            isMetricsSupportActive:
-              type: string
-            isNetworkPolicyActive:
-              type: string
             kind:
               type: string
+            metricsSupport:
+              properties:
+                enabled:
+                  type: boolean
+              required:
+              - enabled
+              type: object
+            secureCommunicationSupport:
+              properties:
+                enabled:
+                  type: boolean
+              required:
+              - enabled
+              type: object
             sentry:
               properties:
                 clientName:
                   type: string
-                dataPersistence:
-                  description: StorageClassName string `json:"storageClassName,omitempty"`
+                dataPersistenceSupport:
                   properties:
                     enabled:
                       type: boolean
@@ -281,7 +288,7 @@ spec:
                   type: object
               required:
               - clientName
-              - dataPersistence
+              - dataPersistenceSupport
               - nodeKey
               - replicas
               type: object
@@ -289,8 +296,7 @@ spec:
               properties:
                 clientName:
                   type: string
-                dataPersistence:
-                  description: StorageClassName string `json:"storageClassName,omitempty"`
+                dataPersistenceSupport:
                   properties:
                     enabled:
                       type: boolean
@@ -522,12 +528,14 @@ spec:
                   type: object
               required:
               - clientName
-              - dataPersistence
+              - dataPersistenceSupport
               - nodeKey
               type: object
           required:
           - clientVersion
           - kind
+          - metricsSupport
+          - secureCommunicationSupport
           type: object
         status:
           description: PolkadotStatus defines the observed state of Polkadot

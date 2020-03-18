@@ -14,35 +14,42 @@ type PolkadotSpec struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
-	ClientVersion string `json:"clientVersion"`
-	Kind string `json:"kind"`
-	Validator `json:"validator,omitempty"`
-	Sentry `json:"sentry,omitempty"`
-	IsNetworkPolicyActive string `json:"isNetworkPolicyActive,omitempty"`
-	IsDataPersistenceActive string `json:"isDataPersistenceActive,omitempty"`
-	IsMetricsSupportActive string `json:"isMetricsSupportActive,omitempty"`
+	ClientVersion              string                     `json:"clientVersion"`
+	Kind                       string                     `json:"kind"`
+	Validator                  Validator                  `json:"validator,omitempty"`
+	Sentry                     Sentry                     `json:"sentry,omitempty"`
+	MetricsSupport             MetricsSupport             `json:"metricsSupport"`
+	SecureCommunicationSupport SecureCommunicationSupport `json:"secureCommunicationSupport"`
 }
 
 type Validator struct {
-	ClientName string `json:"clientName"`
-	NodeKey string `json:"nodeKey"`
-	ReservedSentryID string `json:"reservedSentryID,omitempty"`
-	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,opt,name=resources"`
-	DataPersistence DataPersistence `json:"dataPersistence"`
+	ClientName             string                      `json:"clientName"`
+	NodeKey                string                      `json:"nodeKey"`
+	ReservedSentryID       string                      `json:"reservedSentryID,omitempty"`
+	Resources              corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,opt,name=resources"`
+	DataPersistenceSupport DataPersistenceSupport      `json:"dataPersistenceSupport"`
 }
 
 type Sentry struct {
-	Replicas int32 `json:"replicas"`
-	ClientName string `json:"clientName"`
-	NodeKey string `json:"nodeKey"`
-	ReservedValidatorID string `json:"reservedValidatorID,omitempty"`
-	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,opt,name=resources"`
-	DataPersistence DataPersistence `json:"dataPersistence"`
+	Replicas               int32                       `json:"replicas"`
+	ClientName             string                      `json:"clientName"`
+	NodeKey                string                      `json:"nodeKey"`
+	ReservedValidatorID    string                      `json:"reservedValidatorID,omitempty"`
+	Resources              corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,opt,name=resources"`
+	DataPersistenceSupport DataPersistenceSupport      `json:"dataPersistenceSupport"`
 }
 
-type DataPersistence struct {
-	Enabled bool`json:"enabled"`
+type DataPersistenceSupport struct {
+	Enabled               bool                         `json:"enabled"`
 	PersistentVolumeClaim corev1.PersistentVolumeClaim `json:"persistentVolumeClaim,omitempty" protobuf:"bytes,name=volumeClaimTemplates"`
+}
+
+type MetricsSupport struct {
+	Enabled bool `json:"enabled"`
+}
+
+type SecureCommunicationSupport struct {
+	Enabled bool `json:"enabled"`
 }
 
 // PolkadotStatus defines the observed state of Polkadot

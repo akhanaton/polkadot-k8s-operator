@@ -5,7 +5,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strconv"
 )
 
 func NewPolkadotSentry(namespace string) *polkadotv1alpha1.Polkadot{
@@ -18,8 +17,6 @@ func NewPolkadotSentry(namespace string) *polkadotv1alpha1.Polkadot{
 			ClientVersion:         "latest",
 			Kind:                  "Sentry",
 			Sentry:                *newSentry(),
-			IsMetricsSupportActive: "false",
-			IsDataPersistenceActive: "false",
 		},
 	}
 }
@@ -38,7 +35,7 @@ func NewPolkadotValidator(namespace string) *polkadotv1alpha1.Polkadot{
 	}
 }
 
-func NewPolkadotSentryAndValidator(namespace string, isNetworkPolicyActive bool) *polkadotv1alpha1.Polkadot{
+func NewPolkadotSentryAndValidator(namespace string, isSecureCommunicationEnabled bool) *polkadotv1alpha1.Polkadot{
 	return &polkadotv1alpha1.Polkadot{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "example-polkadot",
@@ -49,7 +46,7 @@ func NewPolkadotSentryAndValidator(namespace string, isNetworkPolicyActive bool)
 			Kind:                  "SentryAndValidator",
 			Sentry:                *newSentry(),
 			Validator:             *newValidator(),
-			IsNetworkPolicyActive: strconv.FormatBool(isNetworkPolicyActive),
+			SecureCommunicationSupport: polkadotv1alpha1.SecureCommunicationSupport{Enabled:isSecureCommunicationEnabled},
 		},
 	}
 }
@@ -66,7 +63,7 @@ func newSentry() *polkadotv1alpha1.Sentry{
 				"memory": resource.MustParse("100Mi"),
 			},
 		},
-		DataPersistence: polkadotv1alpha1.DataPersistence{
+		DataPersistenceSupport: polkadotv1alpha1.DataPersistenceSupport{
 			Enabled:false,
 		},
 	}
@@ -83,7 +80,7 @@ func newValidator() *polkadotv1alpha1.Validator{
 				"memory": resource.MustParse("100Mi"),
 			},
 		},
-		DataPersistence: polkadotv1alpha1.DataPersistence{
+		DataPersistenceSupport: polkadotv1alpha1.DataPersistenceSupport{
 			Enabled:false,
 		},
 	}

@@ -15,7 +15,7 @@ func (r *ReconcilerPolkadot) handleNetworkPolicy(CRInstance *polkadotv1alpha1.Po
 
 //pattern factory
 func getHandlerNetworkPolicy(CRInstance *polkadotv1alpha1.Polkadot) IHandlerNetworkPolicy {
-	if CRInstance.Spec.IsNetworkPolicyActive != "true" {
+	if CRInstance.Spec.SecureCommunicationSupport.Enabled != true {
 		return &handlerNetworkPolicyDefault{}
 	}
 	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {

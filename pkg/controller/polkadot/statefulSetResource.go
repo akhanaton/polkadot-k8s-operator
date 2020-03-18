@@ -12,7 +12,7 @@ import (
 	"strconv"
 )
 
-func getCommands(nodeKey,clientName, isDataPersistenceActive string) []string{
+func getCommands(nodeKey,clientName string, isDataPersistenceEnabled bool) []string{
 	c := []string{
 		"polkadot",
 		"--node-key", nodeKey,
@@ -28,22 +28,22 @@ func getCommands(nodeKey,clientName, isDataPersistenceActive string) []string{
 		"--rpc-cors=all",
 		//"--no-telemetry",
 	}
-	if isDataPersistenceActive == "true" {
+	if isDataPersistenceEnabled == true {
 		c = append(c,"-d=" + volumeMountPath)
 	}
 	return c
 }
 
 type Parameters struct{
-	name string
-	namespace string
-	labels map[string]string
-	replicas int32
-	version string
-	commands []string
+	name                     string
+	namespace                string
+	labels                   map[string]string
+	replicas                 int32
+	version                  string
+	commands                 []string
 	clientContainerResources corev1.ResourceRequirements
-	dataPersistence polkadotv1alpha1.DataPersistence
-	isMetricsSupportActive string
+	dataPersistence          polkadotv1alpha1.DataPersistenceSupport
+	isMetricsSupportEnabled  bool
 }
 
 func newStatefulSetSentry(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.StatefulSet {
@@ -52,13 +52,12 @@ func newStatefulSetSentry(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Statefu
 	clientName := CRInstance.Spec.Sentry.ClientName
 	nodeKey := CRInstance.Spec.Sentry.NodeKey
 	clientContainerResources := CRInstance.Spec.Sentry.Resources
-	dataPersistence := CRInstance.Spec.Sentry.DataPersistence
-	isDataPersistenceActive := CRInstance.Spec.IsDataPersistenceActive
-	isMetricsSupportActive := CRInstance.Spec.IsMetricsSupportActive
+	dataPersistence := CRInstance.Spec.Sentry.DataPersistenceSupport
+	isMetricsSupportEnabled := CRInstance.Spec.MetricsSupport.Enabled
 
 	labels := getSentrylabels()
 
-	commands := getCommands(nodeKey,clientName,isDataPersistenceActive)
+	commands := getCommands(nodeKey,clientName,dataPersistence.Enabled)
 	commands = append(commands,"--sentry")
 	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
 		reservedValidatorID := CRInstance.Spec.Sentry.ReservedValidatorID
@@ -66,15 +65,15 @@ func newStatefulSetSentry(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Statefu
 	}
 
 	p := Parameters{
-		name:                    SentrySSName,
-		namespace:               CRInstance.Namespace,
-		labels:                  labels,
-		replicas:                replicas,
-		version:                 version,
-		commands:                commands,
-		clientContainerResources:clientContainerResources,
-		dataPersistence: dataPersistence,
-		isMetricsSupportActive:  isMetricsSupportActive,
+		name:                     SentrySSName,
+		namespace:                CRInstance.Namespace,
+		labels:                   labels,
+		replicas:                 replicas,
+		version:                  version,
+		commands:                 commands,
+		clientContainerResources: clientContainerResources,
+		dataPersistence:          dataPersistence,
+		isMetricsSupportEnabled:  isMetricsSupportEnabled,
 	}
 
 	return getStatefulSet(p)
@@ -86,13 +85,12 @@ func newStatefulSetValidator(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Stat
 	clientName := CRInstance.Spec.Validator.ClientName
 	nodeKey := CRInstance.Spec.Validator.NodeKey
 	clientContainerResources := CRInstance.Spec.Validator.Resources
-	dataPersistence := CRInstance.Spec.Validator.DataPersistence
-	isDataPersistenceActive := CRInstance.Spec.IsDataPersistenceActive
-	isMetricsSupportActive := CRInstance.Spec.IsMetricsSupportActive
+	dataPersistence := CRInstance.Spec.Validator.DataPersistenceSupport
+	isMetricsSupportEnabled := CRInstance.Spec.MetricsSupport.Enabled
 
 	labels := getValidatorLabels()
 
-	commands := getCommands(nodeKey,clientName,isDataPersistenceActive)
+	commands := getCommands(nodeKey,clientName,dataPersistence.Enabled)
 	commands = append(commands,"--validator")
 	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
 		reservedSentryID := CRInstance.Spec.Validator.ReservedSentryID
@@ -102,15 +100,15 @@ func newStatefulSetValidator(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Stat
 	}
 
 	p := Parameters{
-		name:                    ValidatorSSName,
-		namespace:               CRInstance.Namespace,
-		labels:                  labels,
-		replicas:                replicas,
-		version:                 version,
-		commands:                commands,
-		clientContainerResources:clientContainerResources,
-		dataPersistence: dataPersistence,
-		isMetricsSupportActive:  isMetricsSupportActive,
+		name:                     ValidatorSSName,
+		namespace:                CRInstance.Namespace,
+		labels:                   labels,
+		replicas:                 replicas,
+		version:                  version,
+		commands:                 commands,
+		clientContainerResources: clientContainerResources,
+		dataPersistence:          dataPersistence,
+		isMetricsSupportEnabled:  isMetricsSupportEnabled,
 	}
 
 	return getStatefulSet(p)
@@ -157,7 +155,7 @@ func getPodSpec(p Parameters) corev1.PodSpec{
 	if p.dataPersistence.Enabled == true{
 		spec.InitContainers = []corev1.Container{ *getVolumePermissionInitContainer(p.dataPersistence.PersistentVolumeClaim.ObjectMeta.Name) }
 	}
-	if p.isMetricsSupportActive == "true"{
+	if p.isMetricsSupportEnabled == true{
 		spec.Containers = append(spec.Containers, getContainerMetrics())
 	}
 	return spec

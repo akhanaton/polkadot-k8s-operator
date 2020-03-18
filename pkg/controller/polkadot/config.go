@@ -13,8 +13,6 @@ const (
 	SentrySSName           = "sentry-sset"
 	ValidatorNetworkPolicy = "validator-networkpolicy"
 	volumeMountPath        = "/data"
-	volumeName             = "polkadot-volume"
-	storageRequest         = "10Gi" //TODO move from here
 	serviceName            = "polkadot"
 )
 

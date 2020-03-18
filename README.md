@@ -55,9 +55,10 @@ metadata:
 spec:
   clientVersion: latest
   kind: "SentryAndValidator"
-  isNetworkPolicyActive: "true"
-  isDataPersistenceActive: "true"
-  isMetricsSupportActive: "true"
+  secureCommunicationSupport:
+    enabled: true
+  metricsSupport:
+    enabled: true
   sentry:
     replicas: 1
     clientName: "IronoaSentry"
@@ -67,7 +68,7 @@ spec:
       limits:
         memory: "512Mi"
         cpu: "0.5"
-    dataPersistence:
+    dataPersistenceSupport:
       enabled: false
   validator:
     clientName: "IronoaValidator"
@@ -77,7 +78,7 @@ spec:
       limits:
         memory: "512Mi"
         cpu: "0.5"
-    dataPersistence:
+    dataPersistenceSupport:
       enabled: true
       persistentVolumeClaim:
         metadata:
@@ -162,6 +163,10 @@ metadata:
 spec:
   clientVersion: latest
   kind: "SentryAndValidator"
+  secureCommunicationSupport:
+    enabled: false
+  metricsSupport:
+    enabled: false
   sentry:
     replicas: 1
     clientName: "IronoaSentry"
@@ -171,7 +176,7 @@ spec:
       limits:
         memory: "512Mi"
         cpu: "0.5"
-    dataPersistence:
+    dataPersistenceSupport:
       enabled: false
   validator:
     clientName: "IronoaValidator"
@@ -181,7 +186,7 @@ spec:
       limits:
         memory: "512Mi"
         cpu: "0.5"
-    dataPersistence:
+    dataPersistenceSupport:
       enabled: false
 ```
 
@@ -397,12 +402,15 @@ Web Socket port of both the service and the client.
 * clientVersion: (string)  
 Image version of the clients. See the Updating of Node Versions section.
 
-* isNetworkPolicyActive: (string)  
+* secureCommunicationSupport: (struct)
+    * enabled: (bool)    
 If set to "true", the operator will handle the creation and the deployment of a Network Policy object that will ensure the secureness of the Validator (it only affects the Kind "SentryAndValidator"). 
 With the parameter active, the Validator is allowed to communicate only with the Sentry layer. Being this mechanism enforced via NetworkPolicy (kubernetes native object), it requires a network plugin installed in you cloud provided cluster (even in minikube) to work properly.  
 See the Secure Communications section.
 
-* isMetricsSupportActive: (string)
+* metricsSupport: (struct)
+    * enabled: (bool)  
+See the Metrics support section.    
 
 * replicas: (int)  
 Allows to decide how many Sentry replicas will be created. See the Node Cluster Scaling Support section.
@@ -410,13 +418,14 @@ Allows to decide how many Sentry replicas will be created. See the Node Cluster 
 * clientName: (string)
 
 * resources: (ResourceRequirements)  
+You can limit or require a specif amount of CPU or memory from your cluster, for example.  
 See the official godoc: https://godoc.org/k8s.io/api/core/v1#ResourceRequirements
 
 * nodeKey: (string)  
 Identity of the node, private (e.g. "0000000000000000000000000000000000000000000000000000000000000013")
 
-* dataPersistence: (struct)
-    * enabled: (string)
+* dataPersistenceSupport: (struct)
+    * enabled: (bool)
     * persistentVolumeClaim: (PersistentVolumeClaim)  
     See the official godoc: https://godoc.org/k8s.io/api/core/v1#PersistentVolumeClaim  
         * storageClassName: (string)  
@@ -446,16 +455,14 @@ In any case, Validator replica size is always hard coded to one and it is not po
             
 ## Secure Communications (Kind:SentryAndValidator)
 
-The configuration is based on the "polkadot-secure-validator" guidelines: https://github.com/w3f/polkadot-secure-validator
+The configuration is based on the "polkadot-secure-validator" guidelines: https://github.com/w3f/polkadot-secure-validator  
+
+The implementation uses the NetworkPolicy kubernetes object.
 
 ### Network Policies
 
 By default, pods are non-isolated; they accept traffic from any source. Pods become isolated by having a NetworkPolicy that selects them. A network policy is a specification of how groups of pods are allowed to communicate with each other and other network endpoints.
 Reference: https://kubernetes.io/docs/concepts/services-networking/network-policies/
-
-### Default configuration
-
-* Network Policies functionality is not active by default, you have to explicitly activate it by setting the parameter isNetworkPolicyActive to "true"
 
 ### Prerequisites
 
@@ -558,7 +565,10 @@ metadata:
 spec:
   clientVersion: latest
   kind: "SentryAndValidator"
-  isNetworkPolicyActive: "true"
+  secureCommunicationSupport:
+    enabled: false
+  metricsSupport:
+    enabled: false
   sentry:
     replicas: 1
     clientName: "IronoaSentry"
@@ -568,7 +578,7 @@ spec:
       limits:
         memory: "512Mi"
         cpu: "0.5"
-    dataPersistence:
+    dataPersistenceSupport:
       enabled: true
       persistentVolumeClaim:
         metadata:
@@ -588,7 +598,7 @@ spec:
       limits:
         memory: "512Mi"
         cpu: "0.5"
-    dataPersistence:
+    dataPersistenceSupport:
       enabled: true
       persistentVolumeClaim:
         metadata:
@@ -614,14 +624,15 @@ The metrics are provided in the Prometheus format.
 
 ### Default configuration
 
-* Metrics functionality is not active by default, you have to explicitly activate it by setting the parameter isMetricsSupportActive to "true"
+* Metrics functionality is not active by default, you have to explicitly activate it by setting the parameter metricsSupport->enabled to "true"
 * Each Pod Service provide access to the metrics:
     * at port 8000
     * at /metrics endpoint
     * "client-service-ip:8000/metrics"
     
-Please change the IMAGE_METRICS parameter in the scripts/config/config.sh to your favourite Container Registry account.  
-Please change the IMAGE_METRICS parameter in the deploy/operator.yaml accordingly.
+Please change the IMAGE_METRICS parameter in the scripts/config/config.sh to your favourite Container Registry account.    
+Please change the IMAGE_METRICS parameter in the deploy/operator.yaml accordingly.  
+You can change the metrics port via the parameter METRICS_PORT in the deploy/operator.yaml
 
 ### How to access to the metrics: Example in Minikube
 

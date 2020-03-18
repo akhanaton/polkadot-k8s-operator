@@ -29,6 +29,12 @@ func getSentrylabels() map[string]string {
 	return labels
 }
 
+func getValidatorLabels() map[string]string {
+	labels := getAppLabels()
+	labels["role"] = "validator"
+	return labels
+}
+
 func getCopyLabelsWithVersion(labels map[string]string, version string) map[string]string {
 	newLabels := getCopy(labels)
 	newLabels["version"] = version
@@ -41,10 +47,4 @@ func getCopy(originalMap map[string]string) map[string]string {
 		newMap[key] = value
 	}
 	return newMap
-}
-
-func getValidatorLabels() map[string]string {
-	labels := getAppLabels()
-	labels["role"] = "validator"
-	return labels
 }

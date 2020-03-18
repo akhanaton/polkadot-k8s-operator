@@ -20,6 +20,7 @@ The Polkadot Project: https://wiki.polkadot.network/en/
     * [Clone the repository](#clone-the-repository)  
     * [Parameters tuning](#parameters-tuning)  
     * [Deployment phase](#deployment-phase)  
+* [Operator Configurable Environment Variables](#operator-configurable-environment-variables)     
 * [Polkadot CR Configurable Parameters](#polkadot-cr-configurable-parameters)  
 * [Updating of Node Versions](#updating-of-node-versions)  
 * [Node Cluster Scaling Support](#node-cluster-scaling-support)  
@@ -337,6 +338,26 @@ serviceaccount "polkadot-operator" deleted
 # stop Minikube
 $ minikube stop
 ```
+
+## Operator Configurable Environment Variables
+
+* IMAGE_CLIENT: (string)  
+Client Image on the Container Registry.
+
+* IMAGE_METRICS: (string)  
+Sidecar Metrics Image on the Container Registry. See the Metrics Support section.
+
+* METRICS_PORT: (string)  
+Port of the service where it is possible to scrape the metrics from.
+
+* P2P_PORT: (string)  
+P2P port of both the service and the client.
+
+* RPC_PORT: (string)  
+RPC port of both the service and the client.
+
+* WS_PORT: (string)  
+Web Socket port of both the service and the client.
 
 ## Polkadot CR Configurable Parameters
 

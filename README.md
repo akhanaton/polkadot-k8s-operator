@@ -127,7 +127,11 @@ Deploy to your favorite kubernetes cloud provided cluster (even minikube) a Cust
 0. Configure your kubectl to work with your desired Kubernetes cluster 
     (e.g. Azure: az aks get-credentials --resource-group myResourceGroup --name myAKSCluster)
 1. Clone the repository locally
-2. In both deploy/operator.yaml and scripts/utils/compileAndDeployOperator.sh configure the images to point to your favourite Container Registry
+2. Configure your application, the single entry points are:
+    * deploy/operator.yaml
+    * scripts/config/config.sh  
+    In both these files configure the images to point to your favourite Container Registry
+    * deploy/crds/polkadot.swisscomblockchain.com_v1alpha1_polkadot_cr.yaml
 3. execute scripts/init.sh
 
 ## Clean up resources
@@ -167,6 +171,8 @@ spec:
       limits:
         memory: "512Mi"
         cpu: "0.5"
+    dataPersistence:
+      enabled: false
   validator:
     clientName: "IronoaValidator"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM
@@ -175,6 +181,8 @@ spec:
       limits:
         memory: "512Mi"
         cpu: "0.5"
+    dataPersistence:
+      enabled: false
 ```
 
 Example of a deployable deploy/operator.yaml, configured to work with my docker hub account (please change the image parameter).

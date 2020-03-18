@@ -142,7 +142,7 @@ func testStatefulSetCreationValidator(t *testing.T) {
 }
 
 func testStatefulSetCreation(t *testing.T, name string) {
-	err := utils.WaitForStatefulSet(t, frameworkGlobal.KubeClient, namespace, name, 1, time.Second*5, time.Second*30)
+	err := utils.WaitForStatefulSet(t, frameworkGlobal.KubeClient, namespace, name, 1, time.Second*5, time.Second*60)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -4,11 +4,14 @@ then
 fi
 cd "$DIR" || exit
 
+# TODO improve with checks
+source ./config/config.sh
+
 pushd .. >/dev/null 2>&1
-kubectl create -f deploy/service_account.yaml
-kubectl create -f deploy/role.yaml
-kubectl create -f deploy/role_binding.yaml
-kubectl create -f deploy/crds/polkadot.swisscomblockchain.com_polkadots_crd.yaml
+kubectl create -f deploy/"$K8S_SERVICE_ACCOUNT"
+kubectl create -f deploy/"$K8S_ROLE"
+kubectl create -f deploy/"$K8S_ROLE_BINDING"
+kubectl create -f deploy/crds/"$K8S_CRD"
 popd >/dev/null 2>&1 || exit
 
 source ./utils/buildAndDeployMetrics.sh

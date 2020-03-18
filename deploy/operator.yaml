@@ -32,3 +32,17 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "polkadot-operator"
+            - name: CONTROLLER_NAME
+              value: "polkadot-controller"
+            - name: IMAGE_CLIENT
+              value: "parity/polkadot"
+            - name: IMAGE_METRICS
+              value: "ironoa/polkadot-metrics:v0.0.1"  #define your favourite
+            - name: METRICS_PORT
+              value: "8000"
+            - name: P2P_PORT
+              value: "30333"
+            - name: RPC_PORT
+              value: "9933"
+            - name: WS_PORT
+              value: "9944"

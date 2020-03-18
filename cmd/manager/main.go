@@ -7,6 +7,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	config2 "github.com/swisscom-blockchain/polkadot-k8s-operator/config"
 	"os"
 	"runtime"
 
@@ -49,6 +50,13 @@ func printVersion() {
 }
 
 func main() {
+	// Load all the env variables
+	err := config2.LoadAllEnvVar()
+	if err != nil {
+		log.Error(err, "Failed to Load the environment variables")
+		os.Exit(1)
+	}
+
 	// Add the zap logger flag set to the CLI. The flag set must
 	// be added before calling pflag.Parse().
 	pflag.CommandLine.AddFlagSet(zap.FlagSet())

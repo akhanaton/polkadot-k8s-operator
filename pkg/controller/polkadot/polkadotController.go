@@ -4,6 +4,7 @@ package polkadot
 
 import (
 	"github.com/go-logr/logr"
+	"github.com/swisscom-blockchain/polkadot-k8s-operator/config"
 	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -17,7 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_polkadot")
+var log = logf.Log.WithName(config.ControllerNameEnvVar.Value)
 
 // ReconcilerPolkadot reconciles a Polkadot object
 type ReconcilerPolkadot struct {
@@ -41,7 +42,7 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("polkadot-controller", mgr, controller.Options{Reconciler: r, MaxConcurrentReconciles: 1})
+	c, err := controller.New(config.ControllerNameEnvVar.Value, mgr, controller.Options{Reconciler: r, MaxConcurrentReconciles: 1})
 	if err != nil {
 		return err
 	}
@@ -82,7 +83,7 @@ var _ reconcile.Reconciler = &ReconcilerPolkadot{}
 // and what is in the CustomResource.Spec
 func (r *ReconcilerPolkadot) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	logger.Info("Reconciling CustomResource")
+	logger.Info("Reconciling Polkadot CustomResource")
 
 	handledCRInstance, err := r.handleCustomResource(request)
 	if err != nil {

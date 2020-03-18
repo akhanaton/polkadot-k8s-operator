@@ -7,16 +7,19 @@ metadata:
 spec:
   clientVersion: latest
   kind: "SentryAndValidator"
-  isNetworkPolicyActive: "true"
-  isDataPersistenceActive: "true"
-  isMetricsSupportActive: "true"
+  isNetworkPolicyActive: "false"
+  isDataPersistenceActive: "false" # TODO dataPersistence: move into sentry and validator
+  isMetricsSupportActive: "false" # TODO metrics: -> enabled:true
   sentry:
     replicas: 1
     clientName: "IronoaSentry"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000013" # Local node id: QmQMTLWkNwGf7P5MQv7kUHCynMg7jje6h3vbvwd2ALPPhm
     reservedValidatorID: "QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM"
+    # TODO ResourceRequirements definition, more granular
     CPULimit: "1"
     memoryLimit: "1Gi"
+    ##############
+    # TODO dataPersistence: enabled, storageClassName, ...
     storageClassName: "default" #["default","managed-premium"]
   validator:
     clientName: "IronoaValidator"

@@ -3,27 +3,20 @@
 package polkadot
 
 const (
-	imageName            = "parity/polkadot"
-	imageNameMetrics     = "ironoa/polkadot-metrics:v0.0.1" //define your favourite
 	ServiceSentryName    = "sentry-service"
 	ServiceValidatorName = "validator-service"
-	metricsPort            = 8000
 	metricsPortName        = "http-metrics"
-	P2PPort                = 30333
 	P2PPortName            = "p2p"
-	RPCPort                = 9933
 	RPCPortName            = "http-rpc"
-	WSPort                 = 9944
 	WSPortName             = "websocket-rpc"
 	ValidatorSSName        = "validator-sset"
 	SentrySSName           = "sentry-sset"
 	ValidatorNetworkPolicy = "validator-networkpolicy"
 	volumeMountPath        = "/data"
 	volumeName             = "polkadot-volume"
-	storageRequest         = "10Gi"
+	storageRequest         = "10Gi" //TODO move from here
 	serviceName            = "polkadot"
 )
-
 
 func getAppLabels() map[string]string {
 	labels := map[string]string{"app": "polkadot"}

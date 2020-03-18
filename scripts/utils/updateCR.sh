@@ -2,8 +2,9 @@ if test -z "$DIR"
 then
       DIR=$(dirname "${BASH_SOURCE[0]}")/..
       cd "$DIR" || exit
+      source ./config/config.sh
 fi
 
 pushd .. >/dev/null 2>&1
-kubectl apply -f deploy/crds/polkadot.swisscomblockchain.com_v1alpha1_polkadot_cr.yaml
+kubectl apply -f deploy/crds/"$K8S_CR"
 popd >/dev/null 2>&1 || exit

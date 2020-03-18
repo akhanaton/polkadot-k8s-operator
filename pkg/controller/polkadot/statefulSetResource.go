@@ -3,6 +3,7 @@
 package polkadot
 
 import (
+	"github.com/swisscom-blockchain/polkadot-k8s-operator/config"
 	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -18,11 +19,11 @@ func getCommands(nodeKey,clientName, isDataPersistenceActive string) []string{
 		"--node-key", nodeKey,
 		"--name", clientName,
 		"--port",
-		strconv.Itoa(P2PPort),
+		strconv.Itoa(config.P2PPortEnvVar.Value),
 		"--rpc-port",
-		strconv.Itoa(RPCPort),
+		strconv.Itoa(config.RPCPortEnvVar.Value),
 		"--ws-port",
-		strconv.Itoa(WSPort),
+		strconv.Itoa(config.WSPortEnvVar.Value),
 		"--unsafe-rpc-external",
 		"--unsafe-ws-external",
 		"--rpc-cors=all",
@@ -174,7 +175,7 @@ func getPodSpec(p Parameters) corev1.PodSpec{
 func getContainerClient(p Parameters) corev1.Container{
 	container:=corev1.Container{
 			Name:           serviceName,
-			Image:          imageName + ":" + p.version,
+			Image:          config.ImageClientEnvVar.Value + ":" + p.version,
 			Command:        p.commands,
 			Ports:          getContainerPortsClient(),
 			LivenessProbe:  getHealthProbeClient(),
@@ -190,7 +191,7 @@ func getContainerClient(p Parameters) corev1.Container{
 func getContainerMetrics() corev1.Container{
 	return corev1.Container {
 		Name:          "metrics-exporter",
-		Image:         imageNameMetrics,
+		Image:         config.ImageMetricsEnvVar.Value,
 		Ports:         getContainerPortsMetrics(),
 		LivenessProbe: getHealthProbeMetrics(),
 	}
@@ -277,7 +278,7 @@ func getHealthProbeMetrics() *corev1.Probe{
 	}
 }
 
-func getResourceLimits(cpu,memory string) corev1.ResourceRequirements{
+func getResourceLimits(cpu,memory string) corev1.ResourceRequirements{ //TODO provide more fine graned solution, the entire ResourceRequirement from the yaml
 	return corev1.ResourceRequirements{
 		Limits: corev1.ResourceList{
 			"cpu":    resource.MustParse(cpu),
@@ -289,15 +290,15 @@ func getResourceLimits(cpu,memory string) corev1.ResourceRequirements{
 func getContainerPortsClient() []corev1.ContainerPort{
 	return []corev1.ContainerPort{
 		{
-			ContainerPort: P2PPort,
+			ContainerPort: int32(config.P2PPortEnvVar.Value),
 			Name:          P2PPortName,
 		},
 		{
-			ContainerPort: RPCPort,
+			ContainerPort: int32(config.RPCPortEnvVar.Value),
 			Name:          RPCPortName,
 		},
 		{
-			ContainerPort: WSPort,
+			ContainerPort: int32(config.WSPortEnvVar.Value),
 			Name:          WSPortName,
 		},
 	}
@@ -306,7 +307,7 @@ func getContainerPortsClient() []corev1.ContainerPort{
 func getContainerPortsMetrics() []corev1.ContainerPort{
 	return []corev1.ContainerPort{
 		{
-			ContainerPort: metricsPort,
+			ContainerPort: int32(config.MetricsPortEnvVar.Value),
 			Name:          metricsPortName,
 		},
 	}

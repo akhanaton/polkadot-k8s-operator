@@ -4,12 +4,14 @@ then
 fi
 cd "$DIR" || exit
 
+source ./config/config.sh
+
 source ./utils/wipeCR.sh
 source ./utils/wipeOperator.sh
 
 pushd .. >/dev/null 2>&1
-kubectl delete -f deploy/crds/polkadot.swisscomblockchain.com_polkadots_crd.yaml
-kubectl delete -f deploy/role_binding.yaml
-kubectl delete -f deploy/role.yaml
-kubectl delete -f deploy/service_account.yaml
+kubectl delete -f deploy/crds/"$K8S_CRD"
+kubectl delete -f deploy/"$K8S_ROLE_BINDING"
+kubectl delete -f deploy/"$K8S_ROLE"
+kubectl delete -f deploy/"$K8S_SERVICE_ACCOUNT"
 popd >/dev/null 2>&1 || exit

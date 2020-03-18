@@ -3,6 +3,7 @@
 package polkadot
 
 import (
+	"github.com/swisscom-blockchain/polkadot-k8s-operator/config"
 	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,26 +43,26 @@ func getServicePorts() []corev1.ServicePort{
 	return []corev1.ServicePort{
 		{
 			Name:       P2PPortName,
-			Port:       P2PPort,
-			TargetPort: intstr.FromInt(P2PPort),
+			Port:       int32(config.P2PPortEnvVar.Value),
+			TargetPort: intstr.FromInt(config.P2PPortEnvVar.Value),
 			Protocol:   "TCP",
 		},
 		{
 			Name:       RPCPortName,
-			Port:       RPCPort,
-			TargetPort: intstr.FromInt(RPCPort),
+			Port:       int32(config.RPCPortEnvVar.Value),
+			TargetPort: intstr.FromInt(config.RPCPortEnvVar.Value),
 			Protocol:   "TCP",
 		},
 		{
 			Name:       WSPortName,
-			Port:       WSPort,
-			TargetPort: intstr.FromInt(WSPort),
+			Port:       int32(config.WSPortEnvVar.Value),
+			TargetPort: intstr.FromInt(config.WSPortEnvVar.Value),
 			Protocol:   "TCP",
 		},
 		{
 			Name:       metricsPortName,
-			Port:       metricsPort,
-			TargetPort: intstr.FromInt(metricsPort),
+			Port:       int32(config.MetricsPortEnvVar.Value),
+			TargetPort: intstr.FromInt(config.MetricsPortEnvVar.Value),
 			Protocol:   "TCP",
 		},
 	}

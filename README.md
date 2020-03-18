@@ -409,7 +409,7 @@ Allows to decide how many Sentry replicas will be created. See the Node Cluster 
 
 * clientName: (string)
 
-resources: (ResourceRequirements)  
+* resources: (ResourceRequirements)  
 See the official godoc: https://godoc.org/k8s.io/api/core/v1#ResourceRequirements
 
 * nodeKey: (string)  
@@ -620,8 +620,8 @@ The metrics are provided in the Prometheus format.
     * at /metrics endpoint
     * "client-service-ip:8000/metrics"
     
-Please change the IMAGE_METRICS parameter in the scripts/utils/buildAndDeployMetrics.sh to your favourite Container Registry account.  
-Please change the imageNameMetrics parameter in the pkg/controller/polkadot/config.go accordingly.
+Please change the IMAGE_METRICS parameter in the scripts/config/config.sh to your favourite Container Registry account.  
+Please change the IMAGE_METRICS parameter in the deploy/operator.yaml accordingly.
 
 ### How to access to the metrics: Example in Minikube
 

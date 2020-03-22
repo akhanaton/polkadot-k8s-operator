@@ -21,17 +21,7 @@ spec:
         memory: "500Mi"
         cpu: "0.5"
     dataPersistenceSupport:
-      enabled: true
-      persistentVolumeClaim:
-        metadata:
-          name: "polkadot-volume"
-        spec:
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: 10Gi
-          storageClassName: local #[default,managed-premium,local]
+      enabled: false
   validator:
     clientName: "IronoaValidator"
     nodeKey: "0000000000000000000000000000000000000000000000000000000000000021" # Local node id: QmQtR1cdEaJM11qBWQBd34FoSgFichCjhtsBfrUFsVAjZM

@@ -19,7 +19,7 @@ spec:
         - name: polkadot-operator
           image: ironoa/customresource-operator:v0.0.8 #define your favourite
           command:
-          - polkadot-operator
+          - polkadot-k8s-operator
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE

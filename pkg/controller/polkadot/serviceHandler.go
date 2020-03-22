@@ -74,7 +74,7 @@ func (r *ReconcilerPolkadot) handleServiceGeneric(CRInstance *polkadotv1alpha1.P
 	if isNotFound == true {
 		logger.Info("Service not found...")
 		logger.Info("Creating a new Service...")
-		err := r.createResource(desiredResource, CRInstance, logger)
+		err := r.createResource(desiredResource, CRInstance)
 		if err != nil {
 			logger.Error(err, "Error on creating a new Service...")
 			return NotForcedRequeue, err

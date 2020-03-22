@@ -4,7 +4,6 @@ package polkadot
 
 import (
 	"context"
-	"github.com/go-logr/logr"
 	polkadotv1alpha1 "github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/apis/polkadot/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,10 +32,9 @@ func (r *ReconcilerPolkadot) setOwnership(owner metav1.Object, owned metav1.Obje
 	return controllerutil.SetControllerReference(owner, owned, r.scheme)
 }
 
-func (r *ReconcilerPolkadot) createResource(resource interface{}, CRInstance *polkadotv1alpha1.Polkadot, logger logr.Logger) error {
+func (r *ReconcilerPolkadot) createResource(resource interface{}, CRInstance *polkadotv1alpha1.Polkadot) error {
 	err := r.setOwnership(CRInstance, resource.(metav1.Object))
 	if err != nil {
-		logger.Error(err, "Error on setting the ownership...")
 		return err
 	}
 	return r.client.Create(context.TODO(), resource.(runtime.Object))

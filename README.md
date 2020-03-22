@@ -16,6 +16,7 @@ The Polkadot Project: https://wiki.polkadot.network/en/
     * [Optionals](#optionals)  
 * [How To Run](#how-to-run)  
 * [Clean up resources](#clean-up-resources)  
+* [How To Run the Unit Tests](#how-to-run-the-unit-tests)  
 * [How To Tutorial with Minikube](#how-to-tutorial-with-minikube)  
     * [Clone the repository](#clone-the-repository)  
     * [Parameters tuning](#parameters-tuning)  
@@ -138,6 +139,74 @@ Deploy to your favorite kubernetes cloud provided cluster (even minikube) a Cust
 ## Clean up resources
 
 Execute scripts/wipeAll.sh
+
+## How To Run the Unit Tests
+
+Move to the controller folder and then run the tests as normal GO unit tests:
+
+```sh
+# move to the controller folder
+$ cd pkg/controller/polkadot
+
+# run the tests (-v = verbose)
+$ go test -v
+=== RUN   TestCreateResource
+=== RUN   TestCreateResource/Service_request_creation
+=== RUN   TestCreateResource/NetworkPolicy_request_creation
+=== RUN   TestCreateResource/StatefulSet_request_creation
+--- PASS: TestCreateResource (0.00s)
+    --- PASS: TestCreateResource/Service_request_creation (0.00s)
+    --- PASS: TestCreateResource/NetworkPolicy_request_creation (0.00s)
+    --- PASS: TestCreateResource/StatefulSet_request_creation (0.00s)
+=== RUN   TestFetchResource
+=== RUN   TestFetchResource/Service_request_found
+=== RUN   TestFetchResource/NetworkPolicy_request_found
+=== RUN   TestFetchResource/StatefulSet_request_found
+=== RUN   TestFetchResource/Service_request_NOT_found
+=== RUN   TestFetchResource/NetworkPolicy_request_NOT_found
+=== RUN   TestFetchResource/StatefulSet_request_NOT_found
+--- PASS: TestFetchResource (0.01s)
+    --- PASS: TestFetchResource/Service_request_found (0.00s)
+    --- PASS: TestFetchResource/NetworkPolicy_request_found (0.00s)
+    --- PASS: TestFetchResource/StatefulSet_request_found (0.01s)
+    --- PASS: TestFetchResource/Service_request_NOT_found (0.00s)
+    --- PASS: TestFetchResource/NetworkPolicy_request_NOT_found (0.00s)
+    --- PASS: TestFetchResource/StatefulSet_request_NOT_found (0.00s)
+=== RUN   TestUpdateResource
+=== RUN   TestUpdateResource/Service_request_update
+=== RUN   TestUpdateResource/NetworkPolicy_request_update
+=== RUN   TestUpdateResource/StatefulSet_request_update
+--- PASS: TestUpdateResource (0.00s)
+    --- PASS: TestUpdateResource/Service_request_update (0.00s)
+    --- PASS: TestUpdateResource/NetworkPolicy_request_update (0.00s)
+    --- PASS: TestUpdateResource/StatefulSet_request_update (0.00s)
+=== RUN   TestHandleNetworkPolicyGeneric
+=== RUN   TestHandleNetworkPolicyGeneric/NetworkPolicy_healthy
+=== RUN   TestHandleNetworkPolicyGeneric/NetworkPolicy_not_found
+--- PASS: TestHandleNetworkPolicyGeneric (0.00s)
+    --- PASS: TestHandleNetworkPolicyGeneric/NetworkPolicy_healthy (0.00s)
+    --- PASS: TestHandleNetworkPolicyGeneric/NetworkPolicy_not_found (0.00s)
+=== RUN   TestHandleCustomResource
+=== RUN   TestHandleCustomResource/Polkadot_healthy
+=== RUN   TestHandleCustomResource/Polkadot_not_found
+--- PASS: TestHandleCustomResource (0.00s)
+    --- PASS: TestHandleCustomResource/Polkadot_healthy (0.00s)
+    --- PASS: TestHandleCustomResource/Polkadot_not_found (0.00s)
+=== RUN   TestServiceGeneric
+=== RUN   TestServiceGeneric/Service_healthy
+=== RUN   TestServiceGeneric/Service_not_found
+--- PASS: TestServiceGeneric (0.00s)
+    --- PASS: TestServiceGeneric/Service_healthy (0.00s)
+    --- PASS: TestServiceGeneric/Service_not_found (0.00s)
+=== RUN   TestHandleStatefulSetGeneric
+=== RUN   TestHandleStatefulSetGeneric/StatefulSet_healthy
+=== RUN   TestHandleStatefulSetGeneric/StatefulSet_not_found
+--- PASS: TestHandleStatefulSetGeneric (0.00s)
+    --- PASS: TestHandleStatefulSetGeneric/StatefulSet_healthy (0.00s)
+    --- PASS: TestHandleStatefulSetGeneric/StatefulSet_not_found (0.00s)
+PASS
+ok      github.com/swisscom-blockchain/polkadot-k8s-operator/pkg/controller/polkadot    0.305s
+```
 
 ## How To Tutorial with Minikube
 

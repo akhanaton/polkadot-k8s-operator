@@ -54,7 +54,7 @@ func (r *ReconcilerPolkadot) handleNetworkPolicyGeneric(CRInstance *polkadotv1al
 	if isNotFound == true {
 		logger.Info("Network Policy not found...")
 		logger.Info("Creating a new Network Policy...")
-		err := r.createResource(desiredResource, CRInstance, logger)
+		err := r.createResource(desiredResource, CRInstance)
 		if err != nil {
 			logger.Error(err, "Error on creating a new Network Policy...")
 			return NotForcedRequeue, err

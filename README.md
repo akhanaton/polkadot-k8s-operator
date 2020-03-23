@@ -515,7 +515,18 @@ Desired deployable configuration:
 
 ## Updating of Node Versions
 
-It is possible to change the Client Nodes Version at runtime (kubectl apply): the operator will automatically handle the clients version update of all the running pods.
+It is possible to change the Client Nodes Version at runtime (kubectl apply): the operator will automatically handle the clients version update of all the running pods.  
+
+```yaml
+# You can control the feature customizing this parameter on the yourCRfile.yaml
+spec:
+  clientVersion: latest
+```
+
+```sh
+# You can apply the change with this command, the operator will take care of the rest for you
+$ kubectl apply -f yourCRfile.yaml
+```
 
 ## Node Cluster Scaling Support
 
@@ -523,13 +534,13 @@ This is the ability of the operator to respond to scale operations defined in th
 In any case, Validator replica size is always hard coded to one and it is not possible to change it to prevent concurrent validation issues.
 
 ```yaml
-# You can control the feature customizing this parameter
+# You can control the feature customizing this parameter on the yourCRfile.yaml
 sentry:
   replicas: 2
 ```
 
 ```sh
-# You can apply the changings just with this command, the operator will take care of the rest for you
+# You can apply the change with this command, the operator will take care of the rest for you
 $ kubectl apply -f yourCRfile.yaml
 ```
 

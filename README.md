@@ -546,7 +546,7 @@ $ kubectl apply -f yourCRfile.yaml
 
 ### Please Note
 
-* If you are running your Polkadot Custom Resources with the Data Persistence Feature enabled, each one of your replicas will need a dedicated Persistent Volume available. Please make sure that there are enough of those for each instance.
+* If you are running your Polkadot Custom Resources with the Data Persistence Feature enabled, each one of your replicas will need a dedicated Persistent Volume available. Please make sure that there are enough of those, one for each instance.
 * you can even use the utils script to apply your updated Custom Resource: scripts/utils/updateCR.yaml
 
             

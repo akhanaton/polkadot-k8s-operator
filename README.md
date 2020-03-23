@@ -25,6 +25,7 @@ The Polkadot Project: https://wiki.polkadot.network/en/
 * [Polkadot CR Configurable Parameters](#polkadot-cr-configurable-parameters)  
 * [Updating of Node Versions](#updating-of-node-versions)  
 * [Node Cluster Scaling Support](#node-cluster-scaling-support)  
+    * [Please Note](#please-note)  
 * [Secure Communications (Kind:SentryAndValidator)](#secure-communications-kindsentryandvalidator)  
 * [Network Policies](#network-policies)  
     * [Default configuration](#default-configuration)  
@@ -33,7 +34,7 @@ The Polkadot Project: https://wiki.polkadot.network/en/
 * [Data Persistence Support](#data-persistence-support)  
     * [How To Tutorial with Minikube](#how-to-tutorial-with-minikube-1)  
 * [Metrics Support](#metrics-support)  
-    * [Default configuration](#default-configuration-2)  
+    * [Default configuration](#default-configuration-1)  
     * [How to access to the metrics: Example in Minikube](#how-to-access-to-the-metrics-example-in-minikube)  
 * [E2E Testing](#e2e-testing)  
     * [Build and run test](#build-and-run-test)  
@@ -116,7 +117,7 @@ Linux: https://github.com/operator-framework/operator-sdk/blob/master/doc/user/i
 
 ### Optionals
 
-* Kubernetes Cluster Network Plugin: network plugin, see the Secure Communications section (SentryAndValidator secure deployment)
+* Kubernetes Cluster Network Plugin: network plugin, see the [Secure Communications section (SentryAndValidator secure deployment)](#secure-communications-kindsentryandvalidator)
 
 * Minikube, a tool that runs a single-node Kubernetes cluster in your local environment   
 Mac: https://kubernetes.io/docs/tasks/tools/install-minikube/#install-minikube  
@@ -452,7 +453,7 @@ $ minikube stop
 Client Image on the Container Registry.
 
 * IMAGE_METRICS: (string)  
-Sidecar Metrics Image on the Container Registry. See the Metrics Support section.
+Sidecar Metrics Image on the Container Registry. See the [Metrics Support section](#metrics-support).
 
 * METRICS_PORT: (string)  
 Port of the service where it is possible to scrape the metrics from.
@@ -469,17 +470,17 @@ Web Socket port of both the service and the client.
 ## Polkadot CR Configurable Parameters
 
 * clientVersion: (string)  
-Image version of the clients. See the Updating of Node Versions section.
+Image version of the clients. See the [Updating of Node Versions section](#updating-of-node-versions).
 
 * secureCommunicationSupport: (struct)
     * enabled: (bool)    
 If set to "true", the operator will handle the creation and the deployment of a Network Policy object that will ensure the secureness of the Validator (it only affects the Kind "SentryAndValidator"). 
 With the parameter active, the Validator is allowed to communicate only with the Sentry layer. Being this mechanism enforced via NetworkPolicy (kubernetes native object), it requires a network plugin installed in you cloud provided cluster (even in minikube) to work properly.  
-See the Secure Communications section.
+See the [Secure Communications section](#secure-communications-kindsentryandvalidator).
 
 * metricsSupport: (struct)
     * enabled: (bool)  
-See the Metrics support section.    
+See the [Metrics support section](#metrics-support).    
 
 * replicas: (int)  
 Allows to decide how many Sentry replicas will be created. See the [Node Cluster Scaling Support section](#node-cluster-scaling-support).
@@ -501,7 +502,7 @@ Identity of the node, private (e.g. "0000000000000000000000000000000000000000000
         This field is particularly interesting. For instance, Azure provides two built in storage classes:  
             * "default": HHD backed
             * "managed-premium": SSD backed, high performance  
-        See Data Persistence Support section for more information.     
+        See [Data Persistence Support section](#data-persistence-support) for more information.     
 
 * kind: Sentry | Validator | SentryAndValidator (string)  
 Desired deployable configuration:

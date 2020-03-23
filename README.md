@@ -482,7 +482,7 @@ See the Secure Communications section.
 See the Metrics support section.    
 
 * replicas: (int)  
-Allows to decide how many Sentry replicas will be created. See the Node Cluster Scaling Support section.
+Allows to decide how many Sentry replicas will be created. See the [Node Cluster Scaling Support section](#node-cluster-scaling-support).
 
 * clientName: (string)
 

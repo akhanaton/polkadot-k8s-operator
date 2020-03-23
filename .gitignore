@@ -75,7 +75,7 @@ tags
 .vscode/*
 .history
 # End of https://www.gitignore.io/api/go,vim,emacs,visualstudiocode
-/polkadot-operator.iml
+/polkadot-k8s-operator.iml
 /.idea/
 /deploy/tests/sentryCompose/testD/
 .DS_Store

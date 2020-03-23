@@ -521,6 +521,23 @@ It is possible to change the Client Nodes Version at runtime (kubectl apply): th
 
 This is the ability of the operator to respond to scale operations defined in the deployed configuration, for example to extend the amount of sentry nodes from 3 to 4. The correct functioning can be tested by executing such an operation and checking the number of deployed instances before and afterwards.  
 In any case, Validator replica size is always hard coded to one and it is not possible to change it to prevent concurrent validation issues.
+
+```yaml
+# You can control the feature customizing this parameter
+sentry:
+  replicas: 2
+```
+
+```sh
+# You can apply the changings just with this command, the operator will take care of the rest for you
+$ kubectl apply -f yourCRfile.yaml
+```
+
+### Please Note
+
+* If you are running your Polkadot Custom Resources with the Data Persistence Feature enabled, each one of your replicas will need a dedicated Persistent Volume available. Please make sure that there are enough of those for each instance.
+* you can even use the utils script to apply your updated Custom Resource: scripts/utils/updateCR.yaml
+
             
 ## Secure Communications (Kind:SentryAndValidator)
 

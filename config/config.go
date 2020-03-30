@@ -20,7 +20,6 @@ type EnvVarInt struct {
 var (
 	ControllerNameEnvVar = EnvVar{"CONTROLLER_NAME", ""}
 	ImageClientEnvVar    = EnvVar{"IMAGE_CLIENT", ""}
-	ImageMetricsEnvVar   = EnvVar{"IMAGE_METRICS",""}
 	MetricsPortEnvVar   = EnvVarInt{"METRICS_PORT",-1}
 	P2PPortEnvVar   = EnvVarInt{"P2P_PORT",-1}
 	RPCPortEnvVar   = EnvVarInt{"RPC_PORT",-1}
@@ -32,7 +31,6 @@ func LoadAllEnvVar() error {
 	var err error
 	if err = loadEnvVar(&ControllerNameEnvVar); err != nil {return err }
 	if err = loadEnvVar(&ImageClientEnvVar); err != nil {return err }
-	if err = loadEnvVar(&ImageMetricsEnvVar); err != nil {return err }
 	if err = loadEnvVarInt(&MetricsPortEnvVar); err != nil {return err }
 	if err = loadEnvVarInt(&P2PPortEnvVar); err != nil {return err }
 	if err = loadEnvVarInt(&RPCPortEnvVar); err != nil {return err }

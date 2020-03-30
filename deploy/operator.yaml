@@ -17,7 +17,7 @@ spec:
       serviceAccountName: polkadot-operator
       containers:
         - name: polkadot-operator
-          image: ironoa/customresource-operator:v0.0.8 #define your favourite
+          image: ironoa/customresource-operator:v0.0.9 #define your favourite
           command:
           - polkadot-k8s-operator
           imagePullPolicy: Always
@@ -36,10 +36,8 @@ spec:
               value: "polkadot-controller"
             - name: IMAGE_CLIENT
               value: "parity/polkadot"
-            - name: IMAGE_METRICS
-              value: "ironoa/polkadot-metrics:v0.0.1"  #define your favourite
             - name: METRICS_PORT
-              value: "8000"
+              value: "9615"
             - name: P2P_PORT
               value: "30333"
             - name: RPC_PORT

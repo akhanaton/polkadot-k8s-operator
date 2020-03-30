@@ -50,13 +50,6 @@ func printVersion() {
 }
 
 func main() {
-	// Load all the env variables
-	err := config2.LoadAllEnvVar()
-	if err != nil {
-		log.Error(err, "Failed to Load the environment variables")
-		os.Exit(1)
-	}
-
 	// Add the zap logger flag set to the CLI. The flag set must
 	// be added before calling pflag.Parse().
 	pflag.CommandLine.AddFlagSet(zap.FlagSet())
@@ -76,6 +69,13 @@ func main() {
 	// be propagated through the whole operator, generating
 	// uniform and structured logs.
 	logf.SetLogger(zap.Logger())
+
+	// Load all the env variables
+	err := config2.LoadAllEnvVar()
+	if err != nil {
+		log.Error(err, "Failed to Load the environment variables")
+		os.Exit(1)
+	}
 
 	printVersion()
 

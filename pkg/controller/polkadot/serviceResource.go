@@ -12,7 +12,7 @@ import (
 
 func newServiceSentry(CRInstance *polkadotv1alpha1.Polkadot) *corev1.Service {
 	labels := getSentrylabels()
-	return getService(ServiceSentryName,CRInstance.Namespace,labels,corev1.ServiceTypeNodePort)
+	return getService(ServiceSentryName,CRInstance,labels,corev1.ServiceTypeNodePort)
 }
 
 func newServiceValidator(CRInstance *polkadotv1alpha1.Polkadot) *corev1.Service {
@@ -21,26 +21,28 @@ func newServiceValidator(CRInstance *polkadotv1alpha1.Polkadot) *corev1.Service 
 	if CRKind(CRInstance.Spec.Kind) == Validator {
 		serviceType = corev1.ServiceTypeNodePort
 	}
-	return getService(ServiceValidatorName,CRInstance.Namespace,labels,serviceType)
+	return getService(ServiceValidatorName,CRInstance,labels,serviceType)
 }
 
-func getService(name string, namespace string, labels  map[string]string, serviceType corev1.ServiceType) *corev1.Service{
+func getService(name string, CRInstance *polkadotv1alpha1.Polkadot, labels  map[string]string, serviceType corev1.ServiceType) *corev1.Service{
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: namespace,
+			Namespace: CRInstance.Namespace,
 			Labels:    labels,
 		},
 		Spec: corev1.ServiceSpec{
 			Type:     serviceType,
-			Ports:    getServicePorts(),
+			Ports:    getServicePorts(CRInstance),
 			Selector: labels,
 		},
 	}
 }
 
-func getServicePorts() []corev1.ServicePort{
-	return []corev1.ServicePort{
+func getServicePorts(CRInstance *polkadotv1alpha1.Polkadot) []corev1.ServicePort{
+	isMetricsSupportEnabled := CRInstance.Spec.MetricsSupport.Enabled
+
+	service := []corev1.ServicePort{
 		{
 			Name:       P2PPortName,
 			Port:       int32(config.P2PPortEnvVar.Value),
@@ -59,11 +61,20 @@ func getServicePorts() []corev1.ServicePort{
 			TargetPort: intstr.FromInt(config.WSPortEnvVar.Value),
 			Protocol:   "TCP",
 		},
-		{
-			Name:       metricsPortName,
-			Port:       int32(config.MetricsPortEnvVar.Value),
-			TargetPort: intstr.FromInt(config.MetricsPortEnvVar.Value),
-			Protocol:   "TCP",
-		},
+	}
+
+	if isMetricsSupportEnabled == true{
+		service = append(service,*getMetricsPort())
+	}
+
+	return service
+}
+
+func getMetricsPort() *corev1.ServicePort{
+	return &corev1.ServicePort{
+		Name:       metricsPortName,
+		Port:       int32(config.MetricsPortEnvVar.Value),
+		TargetPort: intstr.FromInt(config.MetricsPortEnvVar.Value),
+		Protocol:   "TCP",
 	}
 }

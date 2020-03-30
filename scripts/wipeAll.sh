@@ -1,10 +1,9 @@
 if test -z "$DIR"
 then
       DIR=$(dirname "${BASH_SOURCE[0]}")
+      cd "$DIR" || exit
+      source ./config/config.sh
 fi
-cd "$DIR" || exit
-
-source ./config/config.sh
 
 source ./utils/wipeCR.sh
 source ./utils/wipeOperator.sh

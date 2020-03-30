@@ -12,7 +12,7 @@ import (
 	"strconv"
 )
 
-func getCommands(nodeKey,clientName string, isDataPersistenceEnabled bool) []string{
+func getCommands(nodeKey,clientName string, isDataPersistenceEnabled, isMetricsSupportEnabled bool) []string{
 	c := []string{
 		"polkadot",
 		"--node-key", nodeKey,
@@ -30,6 +30,9 @@ func getCommands(nodeKey,clientName string, isDataPersistenceEnabled bool) []str
 	}
 	if isDataPersistenceEnabled == true {
 		c = append(c,"-d=" + volumeMountPath)
+	}
+	if isMetricsSupportEnabled == true {
+		c = append(c, "--prometheus-external", "--prometheus-port", strconv.Itoa(config.MetricsPortEnvVar.Value))
 	}
 	return c
 }
@@ -57,7 +60,7 @@ func newStatefulSetSentry(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Statefu
 
 	labels := getSentrylabels()
 
-	commands := getCommands(nodeKey,clientName,dataPersistence.Enabled)
+	commands := getCommands(nodeKey,clientName,dataPersistence.Enabled,isMetricsSupportEnabled)
 	commands = append(commands,"--sentry")
 	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
 		reservedValidatorID := CRInstance.Spec.Sentry.ReservedValidatorID
@@ -90,7 +93,7 @@ func newStatefulSetValidator(CRInstance *polkadotv1alpha1.Polkadot) *appsv1.Stat
 
 	labels := getValidatorLabels()
 
-	commands := getCommands(nodeKey,clientName,dataPersistence.Enabled)
+	commands := getCommands(nodeKey,clientName,dataPersistence.Enabled,isMetricsSupportEnabled)
 	commands = append(commands,"--validator")
 	if CRKind(CRInstance.Spec.Kind) == SentryAndValidator {
 		reservedSentryID := CRInstance.Spec.Validator.ReservedSentryID
@@ -155,9 +158,6 @@ func getPodSpec(p Parameters) corev1.PodSpec{
 	if p.dataPersistence.Enabled == true{
 		spec.InitContainers = []corev1.Container{ *getVolumePermissionInitContainer(p.dataPersistence.PersistentVolumeClaim.ObjectMeta.Name) }
 	}
-	if p.isMetricsSupportEnabled == true{
-		spec.Containers = append(spec.Containers, getContainerMetrics())
-	}
 	return spec
 }
 
@@ -175,15 +175,6 @@ func getContainerClient(p Parameters) corev1.Container{
 			container.VolumeMounts=getVolumeMounts(p.dataPersistence.PersistentVolumeClaim.ObjectMeta.Name)
 		}
 		return container
-}
-
-func getContainerMetrics() corev1.Container{
-	return corev1.Container {
-		Name:          "metrics-exporter",
-		Image:         config.ImageMetricsEnvVar.Value,
-		Ports:         getContainerPortsMetrics(),
-		LivenessProbe: getHealthProbeMetrics(),
-	}
 }
 
 func getVolumePermissionInitContainer(volumeMountName string) *corev1.Container {
@@ -236,19 +227,6 @@ func getHealthProbeClient() *corev1.Probe{
 	}
 }
 
-func getHealthProbeMetrics() *corev1.Probe{
-	return &corev1.Probe{
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path: "/metrics",
-				Port: intstr.IntOrString{Type: intstr.String, StrVal: metricsPortName},
-			},
-		},
-		InitialDelaySeconds: 10,
-		PeriodSeconds:       10,
-	}
-}
-
 func getContainerPortsClient() []corev1.ContainerPort{
 	return []corev1.ContainerPort{
 		{
@@ -262,15 +240,6 @@ func getContainerPortsClient() []corev1.ContainerPort{
 		{
 			ContainerPort: int32(config.WSPortEnvVar.Value),
 			Name:          WSPortName,
-		},
-	}
-}
-
-func getContainerPortsMetrics() []corev1.ContainerPort{
-	return []corev1.ContainerPort{
-		{
-			ContainerPort: int32(config.MetricsPortEnvVar.Value),
-			Name:          metricsPortName,
 		},
 	}
 }

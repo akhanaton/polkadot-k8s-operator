@@ -5,7 +5,7 @@ kind: Polkadot
 metadata:
   name: polkadot-cr
 spec:
-  clientVersion: latest
+  clientVersion: v0.7.28
   kind: "SentryAndValidator"
   secureCommunicationSupport:
     enabled: false

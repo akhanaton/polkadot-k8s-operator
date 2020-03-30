@@ -292,10 +292,8 @@ spec:
               value: "polkadot-controller"
             - name: IMAGE_CLIENT
               value: "parity/polkadot"
-            - name: IMAGE_METRICS
-              value: "ironoa/polkadot-metrics:v0.0.1"  #define your favourite
             - name: METRICS_PORT
-              value: "8000"
+              value: "9615"
             - name: P2P_PORT
               value: "30333"
             - name: RPC_PORT
@@ -307,8 +305,7 @@ spec:
 Change scripts/config/config.sh accordingly to the previous configured image value.
 ```sh
 IMAGE_OPERATOR=ironoa/customresource-operator:v0.0.8 #define your favourite
-IMAGE_METRICS=ironoa/polkadot-metrics:v0.0.1 # define your favourite
-# The above parameters have to match with the ones in the deployed resource defined in the deploy/operator.yaml file
+# The above parameter have to match with the ones in the deployed resource defined in the deploy/operator.yaml file
 ```
 
 ### Deployment phase
@@ -452,11 +449,8 @@ $ minikube stop
 * IMAGE_CLIENT: (string)  
 Client Image on the Container Registry.
 
-* IMAGE_METRICS: (string)  
-Sidecar Metrics Image on the Container Registry. See the [Metrics Support section](#metrics-support).
-
 * METRICS_PORT: (string)  
-Port of the service where it is possible to scrape the metrics from.
+Port of the service where it is possible to scrape the metrics from. See the [Metrics Support section](#metrics-support).
 
 * P2P_PORT: (string)  
 P2P port of both the service and the client.
@@ -714,22 +708,17 @@ You can now deploy the operator as usual, also with the init.sh script.
 
 ## Metrics Support
 
-The solution uses the Sidecar Pattern concept: a metrics-exporter container is running aside each Polkadot client container in the same Pod.
-
-The metrics exporter is a python script provided directly by parity for substrate and Polkadot use cases: https://github.com/paritytech/dotexporter
-
-The metrics are provided in the Prometheus format.
+Substrate exposes an endpoint which serves metrics in the Prometheus exposition format available on port 9615. You can change the port with --prometheus-port <PORT> and enable it to be accessed over an interface other than local host with --prometheus-external.  
+Official documentation at: https://substrate.dev/docs/en/next/tutorials/visualizing-node-metrics/
 
 ### Default configuration
 
 * Metrics functionality is not active by default, you have to explicitly activate it by setting the parameter metricsSupport->enabled to "true"
 * Each Pod Service provide access to the metrics:
-    * at port 8000
+    * at port 9615
     * at /metrics endpoint
-    * "client-service-ip:8000/metrics"
+    * "client-service-ip:9615/metrics"
     
-Please change the IMAGE_METRICS parameter in the scripts/config/config.sh to your favourite Container Registry account.    
-Please change the IMAGE_METRICS parameter in the deploy/operator.yaml accordingly.  
 You can change the metrics port via the parameter METRICS_PORT in the deploy/operator.yaml
 
 ### How to access to the metrics: Example in Minikube
@@ -740,42 +729,7 @@ $ ./init.sh
 serviceaccount/polkadot-operator created
 role.rbac.authorization.k8s.io/polkadot-operator created
 rolebinding.rbac.authorization.k8s.io/polkadot-operator created
-customresourcedefinition.apiextensions.k8s.io/polkadots.polkadot.swisscomblockchain.com created
-Sending build context to Docker daemon  46.59kB
-Step 1/6 : FROM python:3
- ---> 0a3a95c81a2b
-Step 2/6 : WORKDIR /usr/src/app
- ---> Using cache
- ---> 6afd46650a00
-Step 3/6 : COPY requirements.txt ./
- ---> Using cache
- ---> d2966df3ab19
-Step 4/6 : RUN pip install --no-cache-dir -r requirements.txt
- ---> Using cache
- ---> bb726a16a342
-Step 5/6 : COPY . .
- ---> Using cache
- ---> 0c9e8596cc30
-Step 6/6 : CMD [ "python", "./dotexporter.py" ]
- ---> Using cache
- ---> 86b334c18d7c
-Successfully built 86b334c18d7c
-Successfully tagged ironoa/polkadot-metrics:v0.0.1
-The push refers to repository [docker.io/ironoa/polkadot-metrics]
-16e8e95276ca: Layer already exists
-79895f0d0be2: Layer already exists
-d518e67ac3b1: Layer already exists
-6446e78ce501: Layer already exists
-00947a3aa859: Layer already exists
-7290ddeeb6e8: Layer already exists
-d3bfe2faf397: Layer already exists
-cecea5b3282e: Layer already exists
-9437609235f0: Layer already exists
-bee1c15bf7e8: Layer already exists
-423d63eb4a27: Layer already exists
-7f9bf938b053: Layer already exists
-f2b4f0674ba3: Layer already exists
-v0.0.1: digest: sha256:fa5bf0b842d70996dab707a4fc1a6eebbfc61df01b7cbfeb9a594eb69a173f1d size: 3051
+customresourcedefinition.apiextensions.k8s.io/polkadots.polkadot.swisscomblockchain.com create
 INFO[0004] Building OCI image ironoa/customresource-operator:v0.0.8
 Sending build context to Docker daemon  58.03MB
 Step 1/7 : FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
@@ -820,15 +774,15 @@ polkadot.polkadot.swisscomblockchain.com/polkadot-cr created
 # check the status of the deployment
 $ kubectl get pods
 polkadot-operator-78b5fc54f-v9d6d   1/1     Running   0          33s
-sentry-sset-0                       2/2     Running   0          29s
-validator-sset-0                    2/2     Running   0          29s
+sentry-sset-0                       1/1     Running   0          29s
+validator-sset-0                    1/1     Running   0          29s
 
 # retrieve the services and check the IP addresses of the polkadot clients
 $ kubectl get services
 kubernetes                  ClusterIP   10.96.0.1        <none>        443/TCP                                                        77m
 polkadot-operator-metrics   ClusterIP   10.100.143.145   <none>        8383/TCP,8686/TCP                                              87s
-sentry-service              NodePort    10.96.76.21      <none>        30333:31945/TCP,9933:30506/TCP,9944:30586/TCP,8000:31836/TCP   87s
-validator-service           ClusterIP   10.101.249.247   <none>        30333/TCP,9933/TCP,9944/TCP,8000/TCP                           87s
+sentry-service              NodePort    10.96.76.21      <none>        30333:31945/TCP,9933:30506/TCP,9944:30586/TCP,9615:31836/TCP   87s
+validator-service           ClusterIP   10.101.249.247   <none>        30333/TCP,9933/TCP,9944/TCP,9615/TCP                           87s
 
 # access inside the minikube cluster
 $ minikube ssh
@@ -840,23 +794,124 @@ $ minikube ssh
 (_) (_) (_)(_)(_) (_)(_)(_) (_)`\___/'(_,__/'`\____)
 
 # test the metrics enpoints
-$ curl 10.96.76.21:8000/metrics
-dot_chain_block_number{name="parity-polkadot",version="0.7.22",chain="Kusama CC3",block="finalized"} 2560
-dot_chain_block_number{name="parity-polkadot",version="0.7.22",chain="Kusama CC3",block="head"} 3061
-dot_peer_count{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 9
-dot_shouldHavePeers{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1
-dot_isSyncing{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1
-dot_specVersion{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1020
-dot_rpc_healthy{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1
+$ curl 10.96.76.21:9615/metrics
 
-$ curl 10.101.249.247:8000/metrics
-dot_chain_block_number{name="parity-polkadot",version="0.7.22",chain="Kusama CC3",block="finalized"} 1536
-dot_chain_block_number{name="parity-polkadot",version="0.7.22",chain="Kusama CC3",block="head"} 1996
-dot_peer_count{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1
-dot_shouldHavePeers{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1
-dot_isSyncing{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 0
-dot_specVersion{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1020
-dot_rpc_healthy{name="parity-polkadot",version="0.7.22",chain="Kusama CC3"} 1
+$ curl 10.101.249.247:9615/metrics
+# HELP polkadot_block_height_number Height of the chain
+# TYPE polkadot_block_height_number gauge
+polkadot_block_height_number{status="best"} 1196
+polkadot_block_height_number{status="finalized"} 1024
+polkadot_block_height_number{status="sync_target"} 1667996
+# HELP polkadot_build_info A metric with a constant '1' value labeled by name, version, and commit.
+# TYPE polkadot_build_info gauge
+polkadot_build_info{commit="7f59f2c",name="parity-polkadot",version="0.7.28"} 1
+# HELP polkadot_cpu_usage_percentage Node CPU usage
+# TYPE polkadot_cpu_usage_percentage gauge
+polkadot_cpu_usage_percentage 51.579490661621094
+# HELP polkadot_database_cache_bytes RocksDB cache size in bytes
+# TYPE polkadot_database_cache_bytes gauge
+polkadot_database_cache_bytes 13318400
+# HELP polkadot_finality_grandpa_communication_gossip_validator_messages Number of messages validated by the finality grandpa gossip validator.
+# TYPE polkadot_finality_grandpa_communication_gossip_validator_messages counter
+polkadot_finality_grandpa_communication_gossip_validator_messages{action="discard",message="neighbor"} 519
+# HELP polkadot_finality_grandpa_round Highest completed GRANDPA round.
+# TYPE polkadot_finality_grandpa_round gauge
+polkadot_finality_grandpa_round 0
+# HELP polkadot_import_queue_blocks_submitted Number of blocks submitted to the import queue.
+# TYPE polkadot_import_queue_blocks_submitted counter
+polkadot_import_queue_blocks_submitted 40
+# HELP polkadot_import_queue_finality_proofs_submitted Number of finality proofs submitted to the import queue.
+# TYPE polkadot_import_queue_finality_proofs_submitted counter
+polkadot_import_queue_finality_proofs_submitted 0
+# HELP polkadot_import_queue_justifications_submitted Number of justifications submitted to the import queue.
+# TYPE polkadot_import_queue_justifications_submitted counter
+polkadot_import_queue_justifications_submitted 0
+# HELP polkadot_memory_usage_bytes Node memory usage
+# TYPE polkadot_memory_usage_bytes gauge
+polkadot_memory_usage_bytes 105020
+# HELP polkadot_network_per_sec_bytes Networking bytes per second
+# TYPE polkadot_network_per_sec_bytes gauge
+polkadot_network_per_sec_bytes{direction="download"} 4252
+polkadot_network_per_sec_bytes{direction="upload"} 2885
+# HELP polkadot_node_roles The roles the node is running as
+# TYPE polkadot_node_roles gauge
+polkadot_node_roles 4
+# HELP polkadot_ready_transactions_number Number of transactions in the ready queue
+# TYPE polkadot_ready_transactions_number gauge
+polkadot_ready_transactions_number 0
+# HELP polkadot_state_cache_bytes State cache size in bytes
+# TYPE polkadot_state_cache_bytes gauge
+polkadot_state_cache_bytes 1253522
+# HELP polkadot_state_db_cache_bytes State DB cache in bytes
+# TYPE polkadot_state_db_cache_bytes gauge
+polkadot_state_db_cache_bytes{subtype="non_canonical"} 168
+polkadot_state_db_cache_bytes{subtype="pinned"} 44
+# HELP polkadot_sub_libp2p_connections Number of libp2p connections
+# TYPE polkadot_sub_libp2p_connections gauge
+polkadot_sub_libp2p_connections 100
+# HELP polkadot_sub_libp2p_is_major_syncing Whether the node is performing a major sync or not.
+# TYPE polkadot_sub_libp2p_is_major_syncing gauge
+polkadot_sub_libp2p_is_major_syncing 1
+# HELP polkadot_sub_libp2p_kbuckets_num_nodes Number of nodes in the Kademlia k-buckets
+# TYPE polkadot_sub_libp2p_kbuckets_num_nodes gauge
+polkadot_sub_libp2p_kbuckets_num_nodes 76
+# HELP polkadot_sub_libp2p_network_per_sec_bytes Average bandwidth usage per second
+# TYPE polkadot_sub_libp2p_network_per_sec_bytes gauge
+polkadot_sub_libp2p_network_per_sec_bytes{direction="in"} 4406
+polkadot_sub_libp2p_network_per_sec_bytes{direction="out"} 2864
+# HELP polkadot_sub_libp2p_notifications_total Number of notification received from all nodes
+# TYPE polkadot_sub_libp2p_notifications_total counter
+polkadot_sub_libp2p_notifications_total{direction="in",protocol="FRNK"} 519
+polkadot_sub_libp2p_notifications_total{direction="in",protocol="dot2"} 20
+polkadot_sub_libp2p_notifications_total{direction="out",protocol="FRNK"} 22
+polkadot_sub_libp2p_notifications_total{direction="out",protocol="dot2"} 22
+# HELP polkadot_sub_libp2p_num_event_stream_channels Number of internal active channels that broadcast network events
+# TYPE polkadot_sub_libp2p_num_event_stream_channels gauge
+polkadot_sub_libp2p_num_event_stream_channels 3
+# HELP polkadot_sub_libp2p_opened_notification_streams Number of open notification substreams
+# TYPE polkadot_sub_libp2p_opened_notification_streams gauge
+polkadot_sub_libp2p_opened_notification_streams{protocol="FRNK"} 22
+polkadot_sub_libp2p_opened_notification_streams{protocol="dot1"} 22
+polkadot_sub_libp2p_opened_notification_streams{protocol="dot2"} 22
+# HELP polkadot_sub_libp2p_peers_count Number of network gossip peers
+# TYPE polkadot_sub_libp2p_peers_count gauge
+polkadot_sub_libp2p_peers_count 22
+# HELP polkadot_sub_libp2p_peerset_num_discovered Number of nodes stored in the peerset manager
+# TYPE polkadot_sub_libp2p_peerset_num_discovered gauge
+polkadot_sub_libp2p_peerset_num_discovered 262
+# HELP polkadot_sub_libp2p_peerset_num_requested Number of nodes that the peerset manager wants us to be connected to
+# TYPE polkadot_sub_libp2p_peerset_num_requested gauge
+polkadot_sub_libp2p_peerset_num_requested 26
+# HELP polkadot_sub_libp2p_random_kademalia_queries_total Number of random Kademlia queries started
+# TYPE polkadot_sub_libp2p_random_kademalia_queries_total counter
+polkadot_sub_libp2p_random_kademalia_queries_total 5
+# HELP polkadot_sync_extra_finality_proofs Number of extra finality proof requests
+# TYPE polkadot_sync_extra_finality_proofs gauge
+polkadot_sync_extra_finality_proofs{status="active"} 0
+polkadot_sync_extra_finality_proofs{status="failed"} 0
+polkadot_sync_extra_finality_proofs{status="importing"} 0
+polkadot_sync_extra_finality_proofs{status="pending"} 0
+# HELP polkadot_sync_extra_justifications Number of extra justifications requests
+# TYPE polkadot_sync_extra_justifications gauge
+polkadot_sync_extra_justifications{status="active"} 0
+polkadot_sync_extra_justifications{status="failed"} 0
+polkadot_sync_extra_justifications{status="importing"} 0
+polkadot_sync_extra_justifications{status="pending"} 0
+# HELP polkadot_sync_fork_targets Number of fork sync targets
+# TYPE polkadot_sync_fork_targets gauge
+polkadot_sync_fork_targets 0
+# HELP polkadot_sync_handshaking_peers Number of newly connected peers
+# TYPE polkadot_sync_handshaking_peers gauge
+polkadot_sync_handshaking_peers 0
+# HELP polkadot_sync_obsolete_requests Number of obsolete requests
+# TYPE polkadot_sync_obsolete_requests gauge
+polkadot_sync_obsolete_requests 0
+# HELP polkadot_sync_peers Number of peers we sync with
+# TYPE polkadot_sync_peers gauge
+polkadot_sync_peers 22
+# HELP polkadot_sync_queued_blocks Number of blocks in import queue
+# TYPE polkadot_sync_queued_blocks gauge
+polkadot_sync_queued_blocks 2304
 ```
 
 ## E2E Testing
@@ -874,6 +929,7 @@ Requirements:
 
 You can run the tests in your local environment with the following command:
 ```sh
+# from the root of the project...
 $ operator-sdk test local ./test/e2e --go-test-flags "-v"
 INFO[0000] Testing operator locally.                    
 === RUN   TestPolkadot
@@ -974,7 +1030,7 @@ Reference: https://kubernetes.io/
 
 ## About the Operator
 
-An Operator is a method of packaging, deploying and managing a Kubernetes application. A Kubernetes application is an application that is both deployed on Kubernetes and managed using the Kubernetes APIs and kubectl tooling. You can think of Operators as the runtime that manages this type of application on Kubernetes.
+An Operator is a method of packaging, deploying and managing a Kubernetes application. A Kubernetes application is an application that is both deployed on Kubernetes and managed using the Kubernetes APIs and kubectl tooling. You can think of Operators as the runtime that manages this type of application on Kubernetes.  
 
 Reference: https://coreos.com/blog/introducing-operator-framework
 
